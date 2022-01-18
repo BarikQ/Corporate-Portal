@@ -1,0 +1,18 @@
+@use 'assets/styles/_colors.scss' as colors;
+
+.labeled-item {
+  display: flex;
+  flex-direction: row;
+  gap: 8px 16px;
+  padding: 2px 0;
+  font-size: 13px;
+  font-weight: 400;
+
+  &__label {
+    color: colors.$text-dark-gray;
+  }
+  
+  &__value {
+    
+  }
+}

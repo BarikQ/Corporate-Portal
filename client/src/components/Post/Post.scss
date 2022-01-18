@@ -1,0 +1,49 @@
+@use 'assets/styles/_colors.scss' as colors;
+
+.post {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 200px;
+
+  &__user {
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+
+    &__link {
+      padding: 0;
+    }
+
+    &__text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    &__photo {
+      max-width: 64px;
+      max-height: 64px;
+    }
+
+    &__date {
+      font-size: 12px;
+      color: colors.$text-sub-gray;
+    }
+  }
+
+  &__text {
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 8px;
+    border-bottom: 1px solid colors.$border-gray;
+    padding-bottom: 16px;
+  }
+
+  &__comments {
+    margin-top: 8px;
+  }
+}

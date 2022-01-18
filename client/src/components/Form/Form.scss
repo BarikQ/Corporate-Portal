@@ -1,0 +1,19 @@
+@use 'assets/styles/_colors.scss' as colors;
+
+.form {
+  &__errors {
+    font-size: 15px;
+    color: colors.$error-red;
+  }
+
+  &__input {
+    &-errors {
+      text-align: left;
+      color: colors.$error-red;
+    }
+
+    &-error {
+      font-size: 12px;
+    }
+  }
+}

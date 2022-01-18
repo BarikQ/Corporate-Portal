@@ -1,0 +1,48 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon",
+    "start:prod": "NODE_ENV='production' node -r ./source/index.js",
+    "test": "test"
+  },
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "eslint": "^7.27.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-config-node": "^4.1.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^3.4.0",
+    "prettier": "^2.3.0"
+  },
+  "dependencies": {
+    "ajv": "^8.9.0",
+    "ajv-errors": "^3.0.0",
+    "ajv-formats": "^2.1.1",
+    "body-parser": "^1.19.0",
+    "cloudinary": "^1.26.3",
+    "connect-mongo": "^4.5.0",
+    "cors": "^2.8.5",
+    "debug": "^4.3.2",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "express-rate-limit": "^5.2.6",
+    "express-session": "^1.17.2",
+    "forever": "^4.0.1",
+    "formidable": "^1.2.2",
+    "jsonwebtoken": "^8.5.1",
+    "mongodb": "^3.6.9",
+    "mongoose": "^5.13.3",
+    "nodemon": "^2.0.14",
+    "passport": "^0.4.1",
+    "passport-cookie": "^1.0.9",
+    "passport-jwt": "^4.0.0",
+    "uuid": "^8.3.2",
+    "winston": "^3.3.3"
+  }
+}
