@@ -1,0 +1,90 @@
+.cropper-container {
+  width: 100% !important;
+}
+
+.image-cropper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &__uploader {
+    width: 100% !important;
+    height: 100px !important;
+    max-width: unset !important;
+    box-sizing: border-box !important;
+  }
+
+  &__controls {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  &__buttons {
+    display: flex;
+    justify-content: center;
+  }
+
+  &__button {
+    width: 200px;
+    margin: 0 auto;
+  }
+
+  &__previews {
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+  }
+
+  &__box {
+    width: 100%;
+    height: fit-content;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 16px;
+
+    img {
+      width: auto;
+      max-height: 100%;
+    }
+  }
+}
+
+.cropped-image {
+  &__previews {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-content: flex-start;
+    gap: 8px;
+  }
+
+  &__preview {
+    width: 250px;
+    max-height: 400px;
+    background-size: contain;
+    background-repeat: no-repeat;
+
+    &--medium {
+      width: 150px;
+      max-height: 300px;
+    }
+
+    &--small {
+      width: 64px;
+      max-height: 64px;
+      border-radius: 50%;
+      overflow: hidden;
+
+      img {
+        border-radius: 50%;
+      }
+    }
+
+    img {
+      width: 100%;
+    }
+  }
+}

@@ -19,6 +19,18 @@ export class User {
     return data;
   }
 
+  async updateUser(userId, userData) {
+    const data = await this.models.user.updateUser(userId, userData);
+
+    return data;
+  }
+
+  async updateHash(userId, hash) {
+    const data = await this.models.user.updateHash(userId, hash);
+
+    return data;
+  }
+
   async getUsers() {
     const data = await this.models.user.getUsers();
 

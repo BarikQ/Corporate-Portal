@@ -19,12 +19,12 @@ const app = express();
 
 const corsOptions = {
   credentials: true,
-  origin: 'http://localhost:3000',
+  origin: ['http://localhost:3000'],
   exposedHeaders: 'X-Token',
 };
 
 app.use(session(sessionOptions));
-app.use(express.json({ limit: '100kb' }));
+app.use(express.json({ limit: '15mb' }));
 app.use(cors(corsOptions));
 app.use(
   express.urlencoded({

@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 
 import { Person, LabeledItem, Post } from 'components';
+
+import { getUserData } from 'api';
 
 import './Profile.scss';
 
@@ -11,7 +14,6 @@ import { ReactComponent as AttachmentIcon } from 'assets/images/attachment.svg';
 const user = {
   name: 'Yaraslau Barkouski',
   birthDate: '15.12.1999',
-  sex: 'male',
   stack: ['React', 'JS', 'HTML', 'CSS', 'SCSS', 'NodeJS', 'Express'],
   image: baseProfileImage,
   status: "Just chillin'",
@@ -61,6 +63,23 @@ const postsList = [
 ];
 
 function Profile() {
+  const { profileId } = useParams();
+  const [userData, setUserData] = useState(user);
+
+  useEffect(() => {
+    getProfileData(profileId);
+  }, []);
+
+  async function getProfileData(id) {
+    try {
+      const response = await getUserData(profileId);
+      setUserData(response.data);
+      console.log(response);
+    } catch (errors) {
+      console.log(errors);
+    }
+  }
+
   function handleInputChange(event) {
     console.log(event);
   }
@@ -70,7 +89,7 @@ function Profile() {
       <div className="profile__column profile__column--narrow">
         <div className="profile__photo page__block">
           <div className="profile__photo-wrapper">
-            <img className="profile__photo-image" src={user.image} />
+            <img className="profile__photo-image" src={userData?.profileData?.profileImage} />
           </div>
 
           <div className="profile__actions">
@@ -81,7 +100,7 @@ function Profile() {
         <div className="profile__friends page__block">
           <a href="/friends">Friends</a>
           <div className="profile__friends-list">
-            <a className="profile__friends-item">
+            {/* <a className="profile__friends-item">
               <Person className="profile__friend" name="Alex Kirillov" image={baseFriendImage} />
             </a>
             <a className="profile__friends-item">
@@ -98,7 +117,7 @@ function Profile() {
             </a>
             <a className="profile__friends-item">
               <Person className="profile__friend" name="Alex Kirillov" image={baseFriendImage} />
-            </a>
+            </a> */}
           </div>
         </div>
       </div>
@@ -106,14 +125,13 @@ function Profile() {
       <div className="profile__column profile__column--wide">
         <div className="profile__info page__block">
           <div className="profile__info-up">
-            <h1 className="profile__info-name">{user.name}</h1>
-            <span className="profile__info-status">{user.status}</span>
+            <h1 className="profile__info-name">{`${userData.profileData?.firstName} ${userData.profileData?.secondName}`}</h1>
+            <span className="profile__info-status">{userData.status}</span>
           </div>
           <div className="profile__info-down info">
-            <LabeledItem label="City" value={user.city} />
-            <LabeledItem label="Birth Date" value={user.birthDate} />
-            <LabeledItem label="Sex" value={user.sex} />
-            <LabeledItem label="Stack" value={user.stack} />
+            <LabeledItem label="City" value={userData.profileData?.city} />
+            <LabeledItem label="Birth Date" value={userData.profileData?.birthDate} />
+            <LabeledItem label="Stack" value={userData.profileData?.technologies.join(', ')} />
           </div>
           {/* <div className="profile__stats"></div> */}
         </div>

@@ -8,3 +8,4 @@ export { NotFoundError, ValidationError } from './errors';
 export { authenticate } from './authenticate';
 export { sessionOptions, jwtOptions } from './options';
 export { objectCropper } from './objectCropper';
+export { objectIterator } from './objectIterator';

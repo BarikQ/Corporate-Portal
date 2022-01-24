@@ -28,9 +28,11 @@ export const login = async (req, res) => {
     const data = await auth.login();
     const token = Buffer.from(data._id.toString()).toString('base64');
     const role = Buffer.from(data.role).toString('base64');
+    const { accessToken } = data;
+    console.log(token);
 
     res.setHeader('X-Token', token);
-    req.session.user = { token, role };
+    req.session.user = { token, role, accessToken };
 
     if (data.role !== 'user') {
       res.status(200).json({ message: 'You have logged in', redirect: true, signature: await generateSignature() });
@@ -46,7 +48,7 @@ export const logout = (req, res) => {
   try {
     req.session.destroy(function () {
       req.session = null;
-      res.clearCookie('user', sessionOptions).clearCookie('role', sessionOptions).sendStatus(205);
+      res.clearCookie('user', sessionOptions).sendStatus(205);
     });
   } catch (error) {
     res.status(400).json({ message: error.message });

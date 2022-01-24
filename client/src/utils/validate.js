@@ -5,7 +5,7 @@ export default function validate(name, value, formValues) {
   if (!validation) return errors;
 
   if (!value) {
-    errors.push('Required');
+    // errors.push('Required');
     return errors;
   }
 

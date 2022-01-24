@@ -14,9 +14,11 @@
       height: min-content;
       position: sticky;
       top: 0;
+      flex-shrink: 0;
     }
 
     &--wide {
+      flex-grow: 1;
       text-align: left;
     }
   }

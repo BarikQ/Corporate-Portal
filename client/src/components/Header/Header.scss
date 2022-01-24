@@ -1,0 +1,16 @@
+@use 'assets/styles/_constants.scss' as sizes;
+
+.header {
+  max-width: sizes.$max-content-size;
+  width: 100%;
+  margin: 0 auto;
+  padding: 4px 0 16px 0;
+  display: flex;
+  justify-content: space-between;
+  position: sticky;
+  text-align: left;
+
+  &__head {
+    font-size: 18px;
+  }
+}

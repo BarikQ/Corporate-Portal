@@ -1,3 +1,5 @@
+import bcrypt from 'bcrypt';
+
 import { user } from '../odm';
 
 export class Auth {
@@ -6,18 +8,34 @@ export class Auth {
   }
 
   async login() {
+    const saltRounds = 10;
+    const salt = await bcrypt.genSalt(saltRounds);
     const header = this.data;
     const [, credentials] = header.split(' ');
     let [email, password] = Buffer.from(credentials, 'base64').toString().split(':');
+    const emailDecoded = Buffer.from(email, 'base64').toString();
+    const passwordDecoded = Buffer.from(password, 'base64').toString();
 
-    const data = await user.findOne({ email, password });
+    const data = await user.findOne({ emailDecoded });
 
-    if (!data) {
-      throw new Error('Auth credentials are not valid');
-    }
+    if (data) {
+      const match = await bcrypt.compare(passwordDecoded, data.password);
 
-    const { _id, role } = data;
+      if (match) {
+        email = await bcrypt.hash(emailDecoded, salt);
+        password = await bcrypt.hash(passwordDecoded, salt);
 
-    return { _id, role };
+        const newAccessToken = (data.accessToken = `${email.split('').reverse().join('')}:${password
+          .split('')
+          .reverse()
+          .join('')}`);
+
+        return await user.findOneAndUpdate(
+          { emailDecoded: emailDecoded },
+          { $set: { accessToken: newAccessToken } },
+          { useFindAndModify: false, returnOriginal: false }
+        );
+      } else throw new Error('Auth credentials are not valid');
+    } else throw new Error('Auth credentials are not valid');
   }
 }
