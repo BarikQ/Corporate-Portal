@@ -10,7 +10,7 @@
     flex-direction: column;
 
     &--narrow {
-      width: 230px;
+      width: 242px;
       height: min-content;
       position: sticky;
       top: 0;
@@ -38,13 +38,11 @@
   &__info {
     &-up {
       padding-bottom: 16px;
-      border-bottom: 1px solid colors.$border-gray;
     }
 
     &-down {
       margin-top: 16px;
       padding-bottom: 16px;
-      border-bottom: 1px solid colors.$border-gray;
     }
 
     &-status {
@@ -70,18 +68,62 @@
   &__actions {
     width: 100%;
     margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 
-    &-edit {
+    &-button {
       width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: none !important;
+      border-radius: 4px;
+      font-size: 14px;
+
+      &--friends {
+      }
+
+      &--edit {
+      }
     }
   }
 
-  &__friends {
-    &-list {
+  .friends {
+    &__item {
+      width: 64px;
+    }
+
+    &__list {
       display: grid;
       grid-template: 1fr / repeat(3, 1fr);
-      gap: 16px;
+      gap: 8px;
+      margin-top: 16px;
     }
+
+    &-user {
+      &__name {
+        display: block;
+        width: inherit;
+        text-align: center;
+        font-size: 13px;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+    }
+
+    &-info {
+      &--top {
+        text-align: center;
+      }
+    }
+  }
+
+  &__not-found {
+    font-size: 60px;
+    -webkit-text-stroke: 1px white;
+    color: transparent;
   }
 }
 
@@ -89,51 +131,5 @@
   &__list {
     display: flex;
     flex-direction: column;
-  }
-}
-
-.editor {
-  &__form {
-    display: grid;
-    grid-template: 1fr / 1fr 1fr;
-    gap: 16px;
-
-    &-button {
-      width: 120px;
-      align-self: flex-end;
-      justify-self: flex-end;
-    }
-  }
-
-  &__attachment {
-    display: none;
-
-    &-label {
-      align-self: flex-end;
-      justify-self: flex-start;
-      cursor: pointer;
-    }
-  }
-
-  &__text {
-    grid-area: 1/1/2/3;
-    height: auto;
-    padding: 16px 8px;
-    background: transparent;
-    border: none;
-    border: 1px solid colors.$button-background-light-gray;
-    border-radius: 4px;
-    color: white;
-    resize: none;
-    outline: none;
-  }
-
-  &__placeholder {
-    color: colors.$text-sub-gray;
-  }
-
-  [contentEditable='true']:empty:not(:focus):before {
-    content: attr(data-text);
-    color: colors.$text-sub-gray;
   }
 }

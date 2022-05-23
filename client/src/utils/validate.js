@@ -27,6 +27,11 @@ export default function validate(name, value, formValues) {
         );
       }
       break;
+    case 'name':
+      if (!/^[a-z ,.'-]+$/i.test(value)) {
+        errors.push('Only english letters allowed');
+      }
+      break;
     case 'password-repeat':
       if (value !== formValues[repeatFor].value) {
         errors.push('Passwords mismatch');

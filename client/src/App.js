@@ -1,23 +1,36 @@
+/* eslint-disable react/prop-types */
 /* eslint-disable react/jsx-no-undef */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, createContext, useContext } from 'react';
 import { Routes, Route, useLocation, Link, withRouter, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { Snackbar, Alert, Button, Stack } from '@mui/material';
 
-import { Welcome, Profile, Settings, ProfileSettings } from './pages';
-import { Header, Navigation, ProtectedRoute } from './components';
-import { setAccess, getAccess } from 'store/access/accessSlice';
-
+import {
+  Welcome,
+  Profile,
+  Settings,
+  ProfileSettings,
+  AccountSettings,
+  PrivacySettings,
+  Friends,
+  Messenger,
+  Chat,
+  Users,
+  Unknown,
+  ProtectedRoute,
+} from './pages';
+import { Header, Navigation } from './components';
+import { setAlert, removeAlert } from 'store/actions';
 import { authRequest } from 'api';
+import { AuthProvider, useAuth } from 'hooks';
+import { buttonBackgroundLightGray } from 'constants/colors';
+import { SocketContext } from 'context/socket';
+import { getToken, setToken } from 'utils';
 
-import '@fontsource/roboto/300.css';
-import '@fontsource/roboto/400.css';
-import '@fontsource/roboto/500.css';
-import '@fontsource/roboto/700.css';
 import './App.scss';
 
-import { buttonBackgroundLightGray } from 'constants/colors';
-
+const AuthContext = createContext(null);
 const theme = createTheme({
   palette: {
     mode: 'dark',
@@ -30,102 +43,140 @@ const theme = createTheme({
   },
 });
 
-function Home() {
-  return <div>Home</div>;
-}
-
-function Messages() {
-  return <div>Messages</div>;
-}
-
-function Friends() {
-  return <div>Friends</div>;
-}
-
-function People() {
-  return <div>People</div>;
-}
-
-function UnknownPage() {
-  return <h2>Page not found </h2>;
-}
-
 function App() {
   const [access, setAccess] = useState(false);
   const mainLinks = [
     {
-      path: `/${localStorage.getItem('x-token') || undefined}`,
+      path: `${getToken() || undefined}`,
       title: 'Profile',
     },
     {
-      path: '/home',
-      title: 'Home',
-    },
-    {
-      path: '/messages',
+      path: 'im',
       title: 'Messages',
     },
     {
-      path: '/friends',
+      path: 'friends',
       title: 'Friends',
     },
     {
-      path: '/people',
-      title: 'People',
+      path: 'users',
+      title: 'Users',
     },
     {
-      path: '/settings',
+      root: 'settings',
+      path: 'settings/profile',
       title: 'Settings',
     },
   ];
   const accessValue = useSelector((state) => state.access.value);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const currentPath = useLocation().pathname;
+  const location = useLocation();
+  const currentPath = location.pathname;
+  const { isAuthed, setIsAuthed } = useAuth();
+  const socket = useContext(SocketContext);
+  const [isSnackbarOpen, setIsSnackbarOpen] = React.useState(false);
+  const alert = useSelector((state) => state.alert.value);
+
+  const openSnackbar = () => {
+    setIsSnackbarOpen(true);
+  };
+
+  const closeSnackbar = (event, reason) => {
+    dispatch(removeAlert());
+    if (reason === 'clickaway') {
+      return;
+    }
+
+    setIsSnackbarOpen(false);
+  };
+
+  // useEffect(async () => {
+  //   try {
+  //     const response = await authRequest();
+  //     if (currentPath === '/') navigate('/im');
+  //     console.log('new one', response);
+  //   } catch (error) {
+  //     console.log('new', error.message);
+  //     dispatch(
+  //       setAlert({
+  //         message: `You are logged out`,
+  //         type: 'error',
+  //       })
+  //     );
+  //     navigate('');
+  //   }
+  // }, [currentPath]);
 
   useEffect(() => {
-    const getData = async () => {
-      try {
-        const response = await authRequest();
-        setAccess(true);
-      } catch (error) {
-        setAccess(false);
-        localStorage.clear('x-token');
-        currentPath === '/' ? null : navigate('/');
-      }
-    };
+    socket.auth = { userId: getToken() };
+    socket.connect();
+    socket.emit('join', { id: getToken() });
+  }, [getToken()]);
 
-    getData();
-  }, [useLocation().pathname]);
+  useEffect(() => {
+    if (alert) openSnackbar();
+  }, [alert]);
 
   return (
-    <ThemeProvider theme={theme}>
-      <div className={`app ${useLocation().pathname === '/' ? 'app--welcome' : ''}`}>
-        <Header />
-        <main className="main">
-          {useLocation().pathname === '/' ? null : (
-            <div className="main__nav sidebar">
-              <Navigation routes={mainLinks} />
+    <AuthProvider>
+      <ThemeProvider theme={theme}>
+        <div className={`app ${location.pathname === '/' ? 'app--welcome' : ''}`}>
+          <Header />
+          <main className="main">
+            {location.pathname === '/' ? null : (
+              <div className="main__nav sidebar">
+                <Navigation routes={mainLinks} />
+              </div>
+            )}
+            <div className="main__body" key={'gdfg'}>
+              <Routes key={'routes'}>
+                <Route element={<ProtectedRoute />}>
+                  <Route path="im" element={<Messenger />} />
+                </Route>
+                <Route element={<ProtectedRoute />}>
+                  <Route path="/:profileId" element={<Profile />} />
+                </Route>
+                <Route element={<ProtectedRoute />}>
+                  <Route path="friends" element={<Friends />} />
+                </Route>
+                <Route element={<ProtectedRoute />}>
+                  <Route path="users" element={<Users />} />
+                </Route>
+                <Route element={<ProtectedRoute />}>
+                  <Route path="settings" element={<Settings />}>
+                    <Route path="profile" element={<ProfileSettings />} />
+                    <Route path="account" element={<AccountSettings />} />
+                    <Route path="privacy" element={<PrivacySettings />} />
+                  </Route>
+                </Route>
+                <Route element={<ProtectedRoute />}>
+                  <Route path="im/:chatId" element={<Chat />} />
+                </Route>
+                <Route path="/" element={<Welcome />} />
+                <Route path="*" element={<Unknown />} />
+              </Routes>
             </div>
-          )}
-          <div className="main__body" key={'gdfg'}>
-            <Routes key={'routes'}>
-              <Route exact path="messages" element={<Messages />} />
-              <Route exact path="/" element={<Welcome />} />
-              <Route exact path="/:profileId" element={<Profile />} />
-              <Route exact path="home" element={<Home />} />
-              <Route exact path="friends" element={<Friends />} />
-              <Route exact path="people" element={<People />} />
-              <Route exact path="settings" element={<Settings />}>
-                <Route exact path="profile" element={<ProfileSettings />} />
-              </Route>
-              <Route path="*" element={<UnknownPage />} />
-            </Routes>
-          </div>
-        </main>
-        <footer className="footer">Footer</footer>
-      </div>
-    </ThemeProvider>
+          </main>
+          <footer className="footer">Footer</footer>
+          {alert ? (
+            <Snackbar
+              open={isSnackbarOpen}
+              autoHideDuration={50000}
+              onClose={closeSnackbar}
+              key={alert}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'left',
+              }}>
+              <Alert onClose={closeSnackbar} severity={alert.type} sx={{ width: '100%' }}>
+                {alert.message}
+              </Alert>
+            </Snackbar>
+          ) : null}
+        </div>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
 

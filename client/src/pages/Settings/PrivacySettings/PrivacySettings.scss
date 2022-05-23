@@ -1,0 +1,13 @@
+.account {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+
+  &__block {
+    padding-bottom: 32px;
+  }
+
+  &__block-title {
+    padding-bottom: 32px;
+  }
+}

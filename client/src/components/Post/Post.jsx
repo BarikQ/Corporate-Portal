@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { Person } from 'components';
+import { User } from 'components';
 
 import './Post.scss';
 
@@ -31,7 +31,7 @@ export default function Post({ author, text, attachments, comments, date, classN
   return (
     <div className="post page__block">
       <div className="post__author">
-        <Person className="post__user" name={author.name} image={author.image} date={date} />
+        <User className="post__user" name={author.name} image={author.image} date={date} />
       </div>
 
       <div className="post__content">
@@ -78,7 +78,7 @@ export default function Post({ author, text, attachments, comments, date, classN
         )}
       </div>
 
-      <div className="post__actions">
+      <div className="post__actions border--bottom--grey">
         <LikeIcon />
         <CommentIcon />
       </div>

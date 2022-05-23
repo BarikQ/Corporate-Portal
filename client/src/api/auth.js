@@ -10,14 +10,12 @@ const authRequest = async () => {
     withCredentials: true,
   };
 
-  const response = await axios(axiosConfig);
-  console.log(response);
-  return response;
+  return await axios(axiosConfig);
 };
 
 const signUpRequest = async (event, formData) => {
   event.preventDefault();
-
+  console.log(formData);
   const data = Object.keys(formData).reduce((accumulator, key, index) => {
     accumulator[key] = btoa(formData[key].value);
     return accumulator;
@@ -33,9 +31,7 @@ const signUpRequest = async (event, formData) => {
     data,
   };
 
-  const response = await axios(axiosConfig);
-
-  return response;
+  return await axios(axiosConfig);
 };
 
 const signInRequest = async (event, formData) => {
@@ -56,9 +52,7 @@ const signInRequest = async (event, formData) => {
     headers: { authorization: `Basic ${authHeader}` },
   };
 
-  const response = await axios(axiosConfig);
-
-  return response;
+  return await axios(axiosConfig);
 };
 
 const logoutRequest = async () => {
@@ -69,9 +63,7 @@ const logoutRequest = async () => {
     withCredentials: true,
   };
 
-  const response = await axios(axiosConfig);
-
-  return response;
+  return await axios(axiosConfig);
 };
 
 export { signInRequest, signUpRequest, authRequest, logoutRequest };

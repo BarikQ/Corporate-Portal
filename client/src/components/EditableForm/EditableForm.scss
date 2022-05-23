@@ -1,0 +1,134 @@
+@use 'assets/styles/_colors.scss' as colors;
+
+.editable-form {
+  display: grid;
+  grid-template: 1fr / 1fr 1fr;
+  gap: 16px;
+
+  &--send {
+    grid-template: 1fr / auto 1fr auto;
+    align-items: center;
+
+    .editable-form__text {
+      grid-area: 1/2/2/3;
+    }
+
+    .editable-form__send-icon {
+      grid-area: 1/3/2/4;
+    }
+
+    .editable-form__attachment {
+      &-label {
+        grid-area: 1/1/2/2;
+        align-self: center;
+      }
+    }
+  }
+
+  &__button {
+    grid-area: 2/2/3/3;
+    width: 120px;
+    justify-self: flex-end;
+
+    &--message {
+      input {
+        display: none;
+      }
+    }
+  }
+
+  &__send-icon {
+    grid-area: 2/2/3/3;
+    justify-self: flex-end;
+    opacity: 0.6;
+    cursor: pointer;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  &__attachment {
+    &-input {
+      display: none;
+    }
+
+    &-label {
+      grid-area: 2/1/3/3;
+      align-self: flex-end;
+      justify-self: flex-start;
+      opacity: 0.7;
+      cursor: pointer;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+
+  &__text {
+    grid-area: 1/1/2/3;
+    width: 100%;
+    height: auto;
+    box-sizing: border-box;
+    padding: 16px 8px;
+    background: transparent;
+    border: none;
+    border: 1px solid colors.$button-background-light-gray;
+    border-radius: 4px;
+    color: white;
+    resize: none;
+    outline: none;
+  }
+
+  &__placeholder {
+    color: colors.$text-sub-gray;
+  }
+
+  [contentEditable='true']:empty:not(:focus):before {
+    content: attr(data-text);
+    color: colors.$text-sub-gray;
+  }
+
+  .attachments {
+    grid-area: 2/1/3/4;
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    font-size: 14px;
+
+    .attachment {
+      width: fit-content;
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 16px;
+      position: relative;
+
+      &:hover {
+        .attachment__delete {
+          display: block;
+        }
+      }
+
+      &__delete {
+        display: none;
+        position: absolute;
+        top: 0;
+        right: 0;
+        cursor: pointer;
+
+        &:hover {
+          path {
+            fill: #ef6c6c;
+          }
+        }
+      }
+
+      img {
+        width: 60px;
+        height: 60px;
+      }
+    }
+  }
+}
