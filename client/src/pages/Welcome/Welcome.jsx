@@ -16,6 +16,7 @@ const signInFormTemplate = {
       id: 'login-email',
       type: 'text',
       value: '',
+      required: true,
     },
     {
       placeholder: 'Password',
@@ -23,6 +24,7 @@ const signInFormTemplate = {
       id: 'login-password',
       type: 'password',
       value: '',
+      required: true,
     },
   ],
   button: {
@@ -52,7 +54,7 @@ const signUpFormTemplate = {
       type: 'password',
       autocomplete: 'off',
       value: '',
-      // validation: 'password',
+      validation: 'password',
       repeatFor: 'passwordRepeat',
       required: true,
     },
@@ -63,7 +65,7 @@ const signUpFormTemplate = {
       type: 'password',
       autocomplete: 'off',
       value: '',
-      // validation: 'password-repeat',
+      validation: 'password-repeat',
       repeatFor: 'password',
       required: true,
     },
@@ -98,7 +100,7 @@ function Welcome() {
           localStorage.setItem('cloud-signature', JSON.stringify(response.data.signature));
         }
 
-        navigate('/settings/profile');
+        navigate(`/${xToken}`);
       }
     } catch (error) {
       if (error.response) {
@@ -119,15 +121,16 @@ function Welcome() {
     try {
       const response = await signUpRequest(event, formData);
       setSignUpErrors(null);
-      console.log(response.data);
+      navigate('/settings/profile');
+
+      localStorage.setItem('x-token', response.headers['x-token']);
     } catch (error) {
       if (error.response) {
         const { status, data } = error.response;
-        console.log(data);
         const errors = JSON.parse(data.message);
 
-        console.log(status, errors);
         setSignUpErrors(errors);
+        console.log(status, errors);
       } else {
         console.error(error);
       }
@@ -146,8 +149,9 @@ function Welcome() {
               <>
                 <Form
                   className="welcome__form"
+                  prefixClass="welcome__form"
                   formTemplate={signInFormTemplate}
-                  handleFormSubmit={signInSubmit}
+                  onFormSubmit={signInSubmit}
                   key={'signInForm'}
                   formErrors={signInErrors}
                 />
@@ -165,8 +169,9 @@ function Welcome() {
               <>
                 <Form
                   className="welcome__form"
+                  prefixClass="welcome__form"
                   formTemplate={signUpFormTemplate}
-                  handleFormSubmit={signUpSubmit}
+                  onFormSubmit={signUpSubmit}
                   formFieldsErrors={signUpErrors}
                   key={'signUpForm'}
                 />

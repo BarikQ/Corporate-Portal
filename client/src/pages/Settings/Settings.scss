@@ -1,0 +1,26 @@
+.settings {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 128px;
+
+  &__nav {
+    width: 200px;
+  }
+
+  &__block {
+    width: 100%;
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    &-button {
+      width: 240px;
+      margin: 0 auto;
+    }
+  }
+}

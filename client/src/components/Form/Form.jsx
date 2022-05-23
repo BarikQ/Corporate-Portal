@@ -1,5 +1,11 @@
 import React, { useEffect, useReducer, useState } from 'react';
+import { Button, TextField, Stack, Chip, Autocomplete } from '@mui/material';
+import AdapterDateFns from '@mui/lab/AdapterDateFns';
+import LocalizationProvider from '@mui/lab/LocalizationProvider';
+import DatePicker from '@mui/lab/DatePicker';
 import PropTypes from 'prop-types';
+
+import { ImageCropper } from 'components';
 
 import { validate } from 'utils';
 
@@ -7,23 +13,26 @@ import './Form.scss';
 
 Form.propTypes = {
   className: PropTypes.string,
+  prefixClass: PropTypes.string,
   formTemplate: PropTypes.object.isRequired,
-  handleFormSubmit: PropTypes.func,
+  onFormSubmit: PropTypes.func,
   formFieldsErrors: PropTypes.object,
   formErrors: PropTypes.array,
 };
 
 Form.defaultProps = {
   className: '',
-  handleFormSubmit: null,
+  prefixClass: '',
+  onFormSubmit: null,
   formFieldsErrors: null,
-  formErrors: [],
+  formErrors: null,
 };
 
 export default function Form({
   className,
+  prefixClass,
   formTemplate,
-  handleFormSubmit,
+  onFormSubmit,
   formFieldsErrors,
   formErrors,
   ...props
@@ -31,7 +40,7 @@ export default function Form({
   const initialValues = formTemplate.fields.reduce((obj, item) => {
     const { name } = item;
     const newObj = {
-      value: '',
+      value: item.value ? item.value : '',
       errors: [],
     };
 
@@ -46,125 +55,174 @@ export default function Form({
       [name]: newObj,
     };
   }, {});
+
   const [formData, setFormData] = useReducer(
     (currentValues, newValues) => ({ ...currentValues, ...newValues }),
     initialValues
   );
+
   const [isValid, setIsValid] = useState(false);
-  const [respondErrors, setRespondErrors] = useState(formErrors);
+  const [respondErrors, setRespondErrors] = useState(null);
 
   useEffect(() => {
     setRespondErrors(formErrors);
   }, [formErrors, formFieldsErrors]);
 
-  function handleInputChange(event) {
-    const { name, value } = event.target;
+  function updateState(name, value) {
     const currentObj = formData[name];
-    const newObj = {
-      value: value.trim(),
+    const newObject = {
+      value: typeof value === 'string' ? value.trim() : value,
       errors: [],
     };
 
     if (currentObj.validation) {
-      newObj.validation = currentObj.validation;
+      newObject.validation = currentObj.validation;
 
-      if (validate(name, value, formData)) newObj.errors = validate(name, value, formData);
+      if (validate(name, value, formData)) newObject.errors = validate(name, value, formData);
     }
 
-    if (currentObj.repeatFor) newObj.repeatFor = currentObj.repeatFor;
+    if (currentObj.repeatFor) newObject.repeatFor = currentObj.repeatFor;
 
-    if (newObj.errors.length > 0) setIsValid(false);
-    else setIsValid(true);
+    setFormData({ [name]: newObject });
+  }
 
-    setFormData({ [name]: newObj });
+  function handleInputChange(event) {
+    const { name, value } = event.target;
+
+    updateState(name, value);
   }
 
   function handleFileUpload(event) {
     const { name } = event.target;
     const value = event.target.files[0];
-    const currentObj = formData[name];
-    const newObj = {
-      value,
-      errors: [],
-    };
 
-    if (currentObj.repeatFor) newObj.repeatFor = currentObj.repeatFor;
-
-    if (currentObj.validation) {
-      newObj.validation = currentObj.validation;
-
-      if (validate(name, value, formData)) newObj.errors = validate(name, value, formData);
-    }
-
-    setFormData({ [name]: newObj });
+    updateState(name, value);
   }
 
   function renderSwitch(field, index) {
     switch (field.type) {
+      case 'cropper':
+        return (
+          <ImageCropper
+            className={prefixClass ? prefixClass + '-cropper' : ''}
+            onChange={(value) => updateState(field.name, value)}
+          />
+        );
+      case 'multi':
+        return (
+          <Autocomplete
+            multiple
+            freeSolo
+            id={field.id}
+            key={`${field.id}-input`}
+            options={field.options.map((option) => option)}
+            required={field.required}
+            name={field.name}
+            className={`multiselect ${prefixClass ? prefixClass + '-input' : ''} ${
+              prefixClass ? prefixClass + '__multiselect' : ''
+            }`}
+            onChange={(event, values) => updateState(field.name, values)}
+            getOptionLabel={(option) => option}
+            filterSelectedOptions
+            renderTags={(value, getTagProps) => {
+              return value.map((option, index) => (
+                <Chip label={option} key={option} {...getTagProps({ index })} />
+              ));
+            }}
+            renderInput={(params) => {
+              return (
+                <TextField
+                  {...params}
+                  label={field.placeholder}
+                  placeholder={field.multiPlaceholder}
+                />
+              );
+            }}
+          />
+        );
       case 'textarea':
         return (
-          <textarea
-            onChange={(event) => handleInputChange(event)}
-            className={`form__input form__input--textarea ${
-              className ? className + '__input' : ''
-            } ${formData[Object.keys(formData)[index]].errors.length > 0 ? 'input--error' : ''}`}
-            placeholder={field.placeholder}
-            name={field.name}
+          <TextField
+            multiline
+            error={formData[Object.keys(formData)[index]].errors.length > 0}
             id={field.id}
-            value={formData[Object.keys(formData)[index]].value}
-            autoComplete={field.autocomplete || 'off'}
+            name={field.name}
             key={`${field.id}-input`}
             required={field.required}
+            placeholder={field.placeholder}
+            autoComplete={field.autocomplete || 'off'}
+            onChange={(event) => handleInputChange(event)}
+            value={formData[Object.keys(formData)[index]].value}
+            className={`form__input form__input--textarea ${
+              prefixClass ? prefixClass + '__input' : ''
+            }`}
           />
         );
       case 'file':
         return (
           <input
-            onChange={(event) => handleFileUpload(event)}
-            className={`form__input form__input--file ${className ? className + '_input' : ''}`}
             type="file"
-            placeholder={field.placeholder}
-            name={field.name}
             id={field.id}
-            autoComplete={field.autocomplete || 'off'}
+            name={field.name}
             key={`${field.id}-input`}
             required={field.required}
+            placeholder={field.placeholder}
+            autoComplete={field.autocomplete || 'off'}
+            onChange={(event) => handleFileUpload(event)}
+            className={`form__input form__input--file ${prefixClass ? prefixClass + '_input' : ''}`}
           />
         );
-      case 'multi':
-        return null;
       case 'text' || 'email':
         return (
-          <input
-            onChange={(event) => handleInputChange(event)}
-            className={`form__input form__input--text input__text--default ${
-              className ? className + '-input' : ''
-            } ${formData[Object.keys(formData)[index]].errors.length > 0 ? 'input--error' : ''}`}
-            type={field.type}
-            placeholder={field.placeholder}
-            name={field.name}
+          <TextField
+            error={formData[Object.keys(formData)[index]].errors.length > 0}
+            helperText={formData[Object.keys(formData)[index]].errors}
             id={field.id}
-            value={formData[Object.keys(formData)[index]].value}
-            autoComplete={field.autocomplete || 'off'}
+            type={field.type}
+            name={field.name}
+            variant="outlined"
+            color="secondary"
+            label={field.placeholder}
             key={`${field.id}-input`}
             required={field.required}
+            autoComplete={field.autocomplete || 'off'}
+            onChange={(event) => handleInputChange(event)}
+            value={formData[Object.keys(formData)[index]].value}
+            className={`form__input form__input--text   ${
+              prefixClass ? prefixClass + '-input' : ''
+            }`}
           />
+        );
+      case 'date':
+        return (
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <DatePicker
+              className={className}
+              label={field.placeholder}
+              value={formData[Object.keys(formData)[index]].value}
+              maxDate={new Date()}
+              onChange={(value) => updateState(field.name, value)}
+              inputFormat="MM/dd/yyyy"
+              renderInput={(params) => <TextField {...params} />}
+            />
+          </LocalizationProvider>
         );
       default:
         return (
-          <input
-            onChange={(event) => handleInputChange(event)}
-            className={`form__input input__text--default ${className ? className + '-input' : ''} ${
-              formData[Object.keys(formData)[index]].errors.length > 0 ? 'input--error' : ''
-            }`}
-            type={field.type}
-            placeholder={field.placeholder}
-            name={field.name}
+          <TextField
+            error={formData[Object.keys(formData)[index]].errors.length > 0}
             id={field.id}
-            value={formData[Object.keys(formData)[index]].value}
-            autoComplete={field.autocomplete || 'off'}
+            type={field.type}
+            name={field.name}
+            variant="outlined"
+            color="secondary"
+            label={field.placeholder}
             key={`${field.id}-input`}
             required={field.required}
+            autoComplete={field.autocomplete || 'off'}
+            onChange={(event) => handleInputChange(event)}
+            value={formData[Object.keys(formData)[index]].value}
+            className={`form__input  ${prefixClass ? prefixClass + '-input' : ''}`}
           />
         );
     }
@@ -190,46 +248,44 @@ export default function Form({
 
     setFormData(newObj);
 
-    if (!isFormValid) return;
-
-    handleFormSubmit(event, formData);
+    onFormSubmit(event, formData);
   }
 
   return (
     <form className={`form ${className}`} onSubmit={(event) => handlePreSubmit(event, formData)}>
       {formTemplate.fields.map((field, index) => (
-        <div className={`form__item ${className ? className + '-item' : ''}`} key={field.id}>
+        <div className={`form__item ${prefixClass ? prefixClass + '-item' : ''}`} key={field.id}>
           <label
-            className={`form__label ${className ? className + '-label' : ''}`}
+            className={`form__label ${prefixClass ? prefixClass + '-label' : ''}`}
             htmlFor={field.name}>
             {renderSwitch(field, index)}
           </label>
 
-          <div
-            key={`${field.id}-errors`}
-            className={`form__input-errors 
-                ${formData[Object.keys(formData)[index]].errors ? 'form__errors--show' : ''}`}>
-            {formData[Object.keys(formData)[index]].errors?.map((error) => {
-              return (
-                <span className="form__input-error" key={`${field.id}-${formData[index]}-error`}>
-                  {error}
-                </span>
-              );
-            })}
-          </div>
+          {formData[Object.keys(formData)[index]].errors.length > 0 ? (
+            <div key={`${field.id}-errors`} className="form__input-errors">
+              {formData[Object.keys(formData)[index]].errors?.map((error) => {
+                return (
+                  <span className="form__input-error" key={`${field.id}-${formData[index]}-error`}>
+                    {error}
+                  </span>
+                );
+              })}
+            </div>
+          ) : null}
         </div>
       ))}
 
       {respondErrors ? <div className="form__errors"> {respondErrors}</div> : null}
 
-      <button
-        disabled={!isValid}
+      <Button
+        variant="contained"
+        color="primary"
         className={`form__submit button--default ${
           formTemplate.button.className ? formTemplate.button.className : ''
-        }`}
+        } ${prefixClass ? prefixClass + '-button' : ''}`}
         type="submit">
         {formTemplate.button.text || 'Submit'}
-      </button>
+      </Button>
     </form>
   );
 }

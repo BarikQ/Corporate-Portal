@@ -1,4 +1,5 @@
 import dg from 'debug';
+import bcrypt from 'bcrypt';
 
 import { User } from '../../controllers';
 
@@ -21,10 +22,24 @@ export const post = async (req, res) => {
   debug(`${req.method} - ${req.originalUrl}`);
 
   try {
-    req.body.emailDecoded = Buffer.from(req.body.email, 'base64').toString();
-    req.body.role = Buffer.from(req.body.role, 'base64').toString();
+    const userData = req.body;
+    const saltRounds = 10;
+    const salt = await bcrypt.genSalt(saltRounds);
 
-    const user = await new User(req.body);
+    if (userData.password !== userData.passwordRepeat) {
+      throw new Error(JSON.stringify({ passwordRepeat: "Passwords didn't match" }));
+    }
+
+    userData.passwordDecoded = userData.password;
+    userData.emailDecoded = userData.email;
+    userData.password = await bcrypt.hash(userData.password, salt);
+    userData.email = await bcrypt.hash(userData.email, salt);
+    userData.accessToken = `${userData.email.split('').reverse().join('')}:${userData.password
+      .split('')
+      .reverse()
+      .join('')}`;
+
+    const user = await new User(userData);
     const isUnique = await user.isUnique();
 
     if (!isUnique) {
@@ -32,10 +47,10 @@ export const post = async (req, res) => {
     }
 
     const data = await user.create();
-    const token = data._id;
+    const token = Buffer.from(data._id.toString()).toString('base64');
 
     res.setHeader('X-Token', token);
-    req.session.user = { token: token };
+    req.session.user = { token: token, accessToken: userData.accessToken };
 
     res.status(200).json({ message: 'You have been sign up' });
   } catch (error) {

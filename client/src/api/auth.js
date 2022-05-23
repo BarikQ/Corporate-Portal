@@ -1,6 +1,19 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3001';
+import { API_URL } from 'constants';
+
+const authRequest = async () => {
+  const axiosConfig = {
+    method: 'get',
+    baseURL: API_URL,
+    url: '/auth',
+    withCredentials: true,
+  };
+
+  const response = await axios(axiosConfig);
+  console.log(response);
+  return response;
+};
 
 const signUpRequest = async (event, formData) => {
   event.preventDefault();
@@ -48,4 +61,17 @@ const signInRequest = async (event, formData) => {
   return response;
 };
 
-export { signInRequest, signUpRequest };
+const logoutRequest = async () => {
+  const axiosConfig = {
+    method: 'post',
+    baseURL: API_URL,
+    url: '/auth/logout',
+    withCredentials: true,
+  };
+
+  const response = await axios(axiosConfig);
+
+  return response;
+};
+
+export { signInRequest, signUpRequest, authRequest, logoutRequest };

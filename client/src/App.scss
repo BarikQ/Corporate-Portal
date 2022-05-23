@@ -1,9 +1,10 @@
 @use 'assets/styles/_colors.scss' as colors;
+@use 'assets/styles/_constants.scss' as sizes;
 
 .app {
   min-height: 100%;
   width: 100%;
-  padding: 16px;
+  padding: 0;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -29,12 +30,8 @@
     }
   }
 
-  .header {
-    position: sticky;
-  }
-
   .main {
-    max-width: 1024px;
+    max-width: sizes.$max-content-size;
     width: 100%;
     margin: 0 auto;
     display: flex;
@@ -79,7 +76,7 @@ a {
     transition: 0.2s ease all;
 
     &:hover {
-      background: #555;
+      background: colors.$hover-dark-gray;
       transition: 0.2s ease all;
     }
   }
@@ -99,6 +96,7 @@ a {
     outline: none;
     border: none;
     border-radius: 4px;
+    font-size: 13px;
 
     &::placeholder {
       color: colors.$text-sub-gray;

@@ -1,4 +1,7 @@
+import dot from 'mongo-dot-notation';
+
 import { user } from '../odm';
+import { objectIterator } from '../utils';
 
 export class User {
   constructor(data) {
@@ -12,7 +15,22 @@ export class User {
   }
 
   async getUser(userData) {
-    const data = await user.find(userData);
+    const data = await user.findOne(userData);
+    // console.log(userData, data);
+    return data;
+  }
+
+  async updateUser(userId, userData) {
+    const data = await user.findOneAndUpdate({ _id: userId }, dot.flatten(userData), {
+      useFindAndModify: false,
+      returnOriginal: false,
+    });
+    console.log('i[pd', userId);
+    return data;
+  }
+
+  async updateHash(userId, hash) {
+    const data = await user.find(userId);
 
     return data;
   }
