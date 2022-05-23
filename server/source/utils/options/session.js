@@ -1,9 +1,9 @@
 import MongoStore from 'connect-mongo';
 import { getJwtKey, getDB } from '..';
-const { DB_URL, DB_NAME } = getDB();
+const { DB_URL, DB_NAME, SCALEGRID_URL, CLEVER_CLOUD } = getDB();
 
 const mongoOptions = {
-  mongoUrl: `${DB_URL}/${DB_NAME}?retryWrites=true`,
+  mongoUrl: `${CLEVER_CLOUD}/${DB_NAME}?retryWrites=true`,
 };
 
 export const sessionOptions = {

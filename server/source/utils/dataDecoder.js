@@ -12,5 +12,6 @@ export const dataDecoder = () => (req, res, next) => {
   } catch (error) {
     console.log('DECODER ERROR', error);
     res.status(500).json({ message: 'Data decoder error', error: error.message });
+    return;
   }
 };

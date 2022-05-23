@@ -36,11 +36,14 @@ export const login = async (req, res) => {
 
     if (data.role !== 'user') {
       res.status(200).json({ message: 'You have logged in', redirect: true, signature: await generateSignature() });
+      return;
     } else {
       res.status(200).json({ message: 'You have logged in' });
+      return;
     }
   } catch (error) {
     res.status(400).json({ message: error.message });
+    return;
   }
 };
 
@@ -50,8 +53,10 @@ export const logout = (req, res) => {
       req.session = null;
       res.clearCookie('user', sessionOptions).sendStatus(205);
     });
+    return;
   } catch (error) {
     res.status(400).json({ message: error.message });
+    return;
   }
 };
 
@@ -60,13 +65,16 @@ export const signature = (req, res) => {
     console.log(req);
   } catch (error) {
     res.status(400).json({ message: error.message });
+    return;
   }
 };
 
 export const auth = (req, res) => {
   try {
     res.sendStatus(204);
+    return;
   } catch (error) {
     res.status(400).json({ message: error.message });
+    return;
   }
 };

@@ -1,7 +1,7 @@
 import dg from 'debug';
-import bcrypt from 'bcrypt';
 
 import { User } from '../../controllers';
+import { objectCropper, saltData } from '../../utils';
 
 const debug = dg('router:user');
 
@@ -13,8 +13,10 @@ export const get = async (req, res) => {
     const data = await user.getUsers();
 
     res.status(200).json(data);
+    return;
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(error.status || 400).json({ message: error.message });
+    return;
   }
 };
 
@@ -23,17 +25,17 @@ export const post = async (req, res) => {
 
   try {
     const userData = req.body;
-    const saltRounds = 10;
-    const salt = await bcrypt.genSalt(saltRounds);
+    const { email, firstName, surname, birthDate, city, password, passwordRepeat, role } = userData;
 
-    if (userData.password !== userData.passwordRepeat) {
+    if (password !== passwordRepeat) {
       throw new Error(JSON.stringify({ passwordRepeat: "Passwords didn't match" }));
     }
 
-    userData.passwordDecoded = userData.password;
-    userData.emailDecoded = userData.email;
-    userData.password = await bcrypt.hash(userData.password, salt);
-    userData.email = await bcrypt.hash(userData.email, salt);
+    userData.profileData = { firstName, surname, birthDate, city };
+    userData.passwordDecoded = password;
+    userData.emailDecoded = email;
+    userData.password = await saltData(password);
+    userData.email = await saltData(email);
     userData.accessToken = `${userData.email.split('').reverse().join('')}:${userData.password
       .split('')
       .reverse()
@@ -53,7 +55,9 @@ export const post = async (req, res) => {
     req.session.user = { token: token, accessToken: userData.accessToken };
 
     res.status(200).json({ message: 'You have been sign up' });
+    return;
   } catch (error) {
     res.status(400).json({ message: error.message });
+    return;
   }
 };

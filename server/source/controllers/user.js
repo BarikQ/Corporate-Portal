@@ -8,44 +8,58 @@ export class User {
   }
 
   async create() {
-    const data = await this.models.user.create();
-
-    return data;
+    return await this.models.user.create();
   }
 
-  async getUser(userData) {
-    const data = await this.models.user.getUser(userData);
-
-    return data;
+  async getUser(userId) {
+    return await this.models.user.getUser(userId);
   }
 
   async updateUser(userId, userData) {
-    const data = await this.models.user.updateUser(userId, userData);
+    return await this.models.user.updateUser(userId, userData);
+  }
 
-    return data;
+  async compareUserPasswords(userId, enteredPassword, newPassword) {
+    return await this.models.user.compareUserPasswords(userId, enteredPassword, newPassword);
+  }
+
+  async deleteUser(userId) {
+    return await this.models.user.deleteUser(userId);
   }
 
   async updateHash(userId, hash) {
-    const data = await this.models.user.updateHash(userId, hash);
-
-    return data;
+    return await this.models.user.updateHash(userId, hash);
   }
 
   async getUsers() {
-    const data = await this.models.user.getUsers();
-
-    return data;
+    return await this.models.user.getUsers();
   }
 
   async isUnique() {
-    const data = await this.models.user.isUnique();
-
-    return data;
+    return await this.models.user.isUnique();
   }
 
   async getUserRoles(userId) {
-    const data = await this.models.user.getUserRoles(userId);
+    return await this.models.user.getUserRoles(userId);
+  }
 
-    return data;
+  async getUserChats(userId) {
+    return await this.models.user.getUserChats(userId);
+  }
+
+  async getChatMessages(userId, chatId) {
+    return await this.models.user.getChatMessages(userId, chatId);
+  }
+
+  async putChatMessage(senderId, receiverId, message) {
+    return await this.models.user.putChatMessage(senderId, receiverId, message);
+  }
+
+  async postUserFriend(userId, friendId) {
+    return await this.models.user.postUserFriend(userId, friendId);
+  }
+
+  async deleteUserFriend(userId, friendId) {
+    return await this.models.user.deleteUserFriend(userId, friendId);
   }
 }

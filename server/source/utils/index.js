@@ -9,3 +9,5 @@ export { authenticate } from './authenticate';
 export { sessionOptions, jwtOptions } from './options';
 export { objectCropper } from './objectCropper';
 export { objectIterator } from './objectIterator';
+export { fileUploader } from './fileUploader';
+export { saltData } from './saltData';

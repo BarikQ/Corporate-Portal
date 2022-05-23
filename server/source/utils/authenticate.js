@@ -3,12 +3,10 @@ import { User } from '../controllers';
 
 export const authenticate = async (req, res, next) => {
   if (!req.session.user) {
-    req.session.destroy(function () {
+    return req.session.destroy(function () {
       req.session = null;
       res.clearCookie('user', sessionOptions).status(401).json({ message: 'You are logged out' });
     });
-
-    return;
   }
 
   try {
@@ -20,14 +18,11 @@ export const authenticate = async (req, res, next) => {
     req.role = data.role;
 
     if (data) {
-      next();
-      return;
+      return next();
     } else {
-      res.status(401).json({ message: 'Authentication credentials are not valid' });
-      return;
+      return res.status(401).json({ message: 'Authentication credentials are not valid' });
     }
   } catch (error) {
-    res.status(401).json({ message: error.message });
-    return;
+    return res.status(401).json({ message: error.message });
   }
 };
