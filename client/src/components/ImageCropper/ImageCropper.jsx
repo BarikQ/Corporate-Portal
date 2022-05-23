@@ -14,17 +14,19 @@ ImageCropper.propTypes = {
   className: PropTypes.string,
   defaultSrc: PropTypes.string,
   onChange: PropTypes.func.isRequired,
+  value: PropTypes.string,
 };
 
 ImageCropper.defaultProps = {
   className: '',
+  value: '',
   defaultSrc: NotFoundImage,
 };
 
 const fileTypes = ['JPG', 'PNG', 'JPEG', 'GIF'];
 
-export default function ImageCropper({ defaultSrc, onChange, className, ...props }) {
-  const [image, setImage] = useState(defaultSrc);
+export default function ImageCropper({ value, defaultSrc, onChange, className, ...props }) {
+  const [image, setImage] = useState(value || defaultSrc);
   const [cropData, setCropData] = useState(null);
   const [cropper, setCropper] = useState();
 

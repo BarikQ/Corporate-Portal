@@ -11,8 +11,10 @@ export const get = async (req, res) => {
     const data = await film.getFilms();
 
     res.status(200).json(data);
+    return;
   } catch (error) {
     res.status(400).json({ message: error.message });
+    return;
   }
 };
 
@@ -22,8 +24,10 @@ export const getAdmin = async (req, res) => {
     const data = await film.getAdminFilms(req.session.user);
 
     res.status(200).json(data);
+    return;
   } catch (error) {
     res.status(400).json({ message: error.message });
+    return;
   }
 };
 
@@ -34,6 +38,7 @@ export const post = async (req, res) => {
     form.parse(req, async (err, fields, files) => {
       if (err) {
         res.status(400).json({ message: error.message });
+        return;
       }
 
       const folderName = fields.title;
@@ -68,8 +73,10 @@ export const post = async (req, res) => {
       const data = await film.getAdminFilms(req.session.user);
       console.log(data);
       res.status(201).json(data);
+      return;
     });
   } catch (error) {
     res.status(400).json({ message: error.message });
+    return;
   }
 };

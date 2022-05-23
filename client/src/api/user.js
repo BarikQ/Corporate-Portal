@@ -12,8 +12,6 @@ const updateUserData = async (event, formData) => {
     return accumulator;
   }, {});
 
-  console.log(data);
-
   const axiosConfig = {
     method: 'put',
     baseURL: API_URL,
@@ -24,9 +22,7 @@ const updateUserData = async (event, formData) => {
     },
   };
 
-  const response = await axios(axiosConfig);
-
-  return response;
+  return await axios(axiosConfig);
 };
 
 const getUserData = async (userId) => {
@@ -37,9 +33,96 @@ const getUserData = async (userId) => {
     withCredentials: true,
   };
 
-  const response = await axios(axiosConfig);
+  const { data } = await axios(axiosConfig);
 
-  return response;
+  return data;
 };
 
-export { updateUserData, getUserData };
+const getUsers = async () => {
+  const axiosConfig = {
+    method: 'get',
+    baseURL: API_URL,
+    url: `/users`,
+    withCredentials: true,
+  };
+
+  const { data } = await axios(axiosConfig);
+
+  return data;
+};
+
+const deleteUser = async (userId = 'unknown') => {
+  const axiosConfig = {
+    method: 'delete',
+    baseURL: API_URL,
+    url: `/users/${userId}`,
+    withCredentials: true,
+  };
+
+  return await axios(axiosConfig);
+};
+
+const getUserChats = async (userId) => {
+  const axiosConfig = {
+    method: 'get',
+    baseURL: API_URL,
+    url: `/users/${userId}/chats`,
+    withCredentials: true,
+  };
+
+  return await axios(axiosConfig);
+};
+
+const getChatMessages = async (userId, chatId) => {
+  const axiosConfig = {
+    method: 'get',
+    baseURL: API_URL,
+    url: `/users/${userId}/chats/${chatId}`,
+    withCredentials: true,
+  };
+
+  return await axios(axiosConfig);
+};
+
+const addUserFriend = async (userId, friendId) => {
+  const axiosConfig = {
+    method: 'post',
+    baseURL: API_URL,
+    url: `/users/${userId}/friends`,
+    withCredentials: true,
+    data: {
+      userId: userId,
+      friendId: friendId,
+    },
+  };
+
+  const { data } = await axios(axiosConfig);
+
+  return data;
+};
+
+const deleteUserFriend = async (userId, friendId) => {
+  const axiosConfig = {
+    method: 'delete',
+    baseURL: API_URL,
+    url: `/users/${userId}/friends`,
+    withCredentials: true,
+    data: {
+      userId: userId,
+      friendId: friendId,
+    },
+  };
+
+  return await axios(axiosConfig);
+};
+
+export {
+  updateUserData,
+  getUserData,
+  getUsers,
+  deleteUser,
+  getUserChats,
+  getChatMessages,
+  addUserFriend,
+  deleteUserFriend,
+};

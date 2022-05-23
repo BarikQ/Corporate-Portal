@@ -1,6 +1,8 @@
 import express from 'express';
 import session from 'express-session';
 import cors from 'cors';
+import path from 'path';
+// import { io } from 'socket.io';
 
 // Routers
 import { auth, films, users } from './routers';
@@ -68,6 +70,7 @@ if (process.env.NODE_ENV !== 'test') {
     const status = statusCode || 500;
 
     res.status(status).json({ message });
+    return;
   });
 }
 
@@ -89,6 +92,11 @@ app.use('*', (req, res, next) => {
   }
 
   next();
+});
+
+app.get('/', (req, res) => {
+  res.sendFile(path.resolve() + '/source/index.html');
+  return;
 });
 
 export { app };

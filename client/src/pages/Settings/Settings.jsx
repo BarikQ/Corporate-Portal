@@ -9,6 +9,17 @@ const settingsLinks = [
   {
     path: 'profile',
     title: 'Profile settings',
+    nested: true,
+  },
+  {
+    path: 'account',
+    title: 'Account settings',
+    nested: true,
+  },
+  {
+    path: 'privacy',
+    title: 'Privacy settings',
+    nested: true,
   },
 ];
 

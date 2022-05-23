@@ -4,14 +4,14 @@ import dg from 'debug';
 import { getDB } from '../utils';
 
 const debug = dg('db');
-const { DB_URL, DB_NAME } = getDB();
+const { DB_URL, DB_NAME, SCALEGRID_URL, CLEVER_CLOUD } = getDB();
 
 const mongooseOptions = {
   useUnifiedTopology: true,
   useNewUrlParser: true,
 };
 
-const connection = mongoose.connect(`${DB_URL}/${DB_NAME}?retryWrites=true`, mongooseOptions);
+const connection = mongoose.connect(`${CLEVER_CLOUD}/${DB_NAME}?retryWrites=true`, mongooseOptions);
 
 connection
   .then(() => {

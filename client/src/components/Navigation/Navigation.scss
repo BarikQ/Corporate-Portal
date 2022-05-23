@@ -28,23 +28,26 @@
     width: 100%;
     display: flex;
     flex-direction: column;
+
+    &-item {
+      width: 100%;
+      display: block;
+    }
   }
 
   &__link {
     width: 100%;
     display: block;
+    padding: 8px;
+    border-radius: 4px;
+    box-sizing: border-box;
 
-    a {
-      width: 100%;
-      display: block;
-      padding: 8px;
-      border-radius: 4px;
-      box-sizing: border-box;
-    
-      &:hover {
-        border-bottom: 1px solid transparent;
-        background-color: colors.$button-background-light-gray;
-      }
+    &:hover {
+      background-color: colors.$button-background-light-gray;
+    }
+
+    &--active {
+      background-color: colors.$active-background-dark;
     }
   }
 }

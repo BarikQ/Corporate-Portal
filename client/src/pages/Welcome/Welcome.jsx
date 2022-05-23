@@ -1,20 +1,22 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import moment from 'moment';
 
 import { Form } from 'components';
 import { signUpRequest, signInRequest } from 'api/auth';
+import { connect, setListener, getSocket } from 'store/actions';
+import { SocketContext } from 'context/socket';
 
 import './Welcome.scss';
 
 const signInFormTemplate = {
-  formType: 'login',
   fields: [
     {
       placeholder: 'Email',
       name: 'email',
       id: 'login-email',
-      type: 'text',
+      type: 'email',
       value: '',
       required: true,
     },
@@ -38,11 +40,45 @@ const signInFormTemplate = {
 const signUpFormTemplate = {
   fields: [
     {
+      placeholder: 'First Name',
+      name: 'firstName',
+      id: 'firstName',
+      type: 'text',
+      autocomplete: 'off',
+      value: '',
+      validation: 'name',
+      required: true,
+    },
+    {
+      placeholder: 'Surname',
+      name: 'surname',
+      id: 'surname',
+      type: 'text',
+      autocomplete: 'off',
+      value: '',
+      validation: 'name',
+      required: true,
+    },
+    {
+      placeholder: 'Birth Date',
+      name: 'birthDate',
+      id: 'birthDate',
+      type: 'date',
+      value: moment().format('L'),
+    },
+    {
+      placeholder: 'City',
+      name: 'city',
+      id: 'city',
+      type: 'text',
+      value: '',
+    },
+    {
       placeholder: 'Email',
       name: 'email',
       id: 'signup-email',
       type: 'email',
-      autocomplete: 'off',
+      autocomplete: 'new-password',
       value: '',
       validation: 'email',
       required: true,
@@ -52,7 +88,7 @@ const signUpFormTemplate = {
       name: 'password',
       id: 'signup-password',
       type: 'password',
-      autocomplete: 'off',
+      autocomplete: 'new-password',
       value: '',
       validation: 'password',
       repeatFor: 'passwordRepeat',
@@ -63,7 +99,7 @@ const signUpFormTemplate = {
       name: 'passwordRepeat',
       id: 'signup-password-repeat',
       type: 'password',
-      autocomplete: 'off',
+      autocomplete: 'new-password',
       value: '',
       validation: 'password-repeat',
       repeatFor: 'password',
@@ -82,7 +118,9 @@ function Welcome() {
   const [signInDisplay, setSignInDisplay] = useState(true);
   const [signUpErrors, setSignUpErrors] = useState(null);
   const [signInErrors, setSignInErrors] = useState(null);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const socket = useContext(SocketContext);
 
   async function signInSubmit(event, formData) {
     event.preventDefault();
@@ -100,6 +138,9 @@ function Welcome() {
           localStorage.setItem('cloud-signature', JSON.stringify(response.data.signature));
         }
 
+        socket.auth = { userId: xToken };
+        socket.connect();
+        // dispatch(connect(xToken));
         navigate(`/${xToken}`);
       }
     } catch (error) {
@@ -121,9 +162,9 @@ function Welcome() {
     try {
       const response = await signUpRequest(event, formData);
       setSignUpErrors(null);
-      navigate('/settings/profile');
-
       localStorage.setItem('x-token', response.headers['x-token']);
+
+      navigate('/settings/profile');
     } catch (error) {
       if (error.response) {
         const { status, data } = error.response;

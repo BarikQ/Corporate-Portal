@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { logoutRequest } from 'api';
+import { logout } from 'utils';
 
 import './Header.scss';
 
@@ -11,11 +12,9 @@ export default function Header() {
   async function handleLogout() {
     try {
       const response = await logoutRequest();
-      localStorage.clear('x-token');
-      navigate('/');
+      logout(navigate);
     } catch (error) {
-      localStorage.clear('x-token');
-      navigate('/');
+      logout(navigate);
     }
   }
 

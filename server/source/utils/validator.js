@@ -10,7 +10,6 @@ ajvErrors(ajv);
 addFormats(ajv)
 
 export const validator = (schema) => (req, res, next) => {
-
   const validate = ajv.compile(schema);
   const trimmedValidationProps = ['keyword', 'schemaPath', 'params', 'name'];
 
