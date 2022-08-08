@@ -5,6 +5,7 @@ import moment from 'moment';
 import { Form, Preloader } from 'components';
 import { getUserData, updateUserData } from 'api';
 import { setAlert, removeError } from 'store/actions';
+import { stackOptions } from 'constants';
 
 import './ProfileSettings.scss';
 
@@ -66,25 +67,7 @@ export default function ProfileSettings() {
           id: 'technologies',
           type: 'multi',
           value: technologies || [],
-          options: [
-            'JS',
-            'HTML',
-            'CSS',
-            'Java',
-            'Python',
-            'C',
-            'C++',
-            'C#',
-            'PHP',
-            'Ruby',
-            'RubyOnRails',
-            'React',
-            'Angular',
-            'Typescript',
-            'R',
-            'Redux',
-            'Unity',
-          ],
+          options: stackOptions,
         },
       ],
       button: {

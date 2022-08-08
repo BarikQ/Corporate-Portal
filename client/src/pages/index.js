@@ -9,7 +9,8 @@ import Messenger from './Messenger/Messenger';
 import Chat from './Chat/Chat';
 import Users from './Users/Users';
 import ProtectedRoute from './ProtectedRoute/ProtectedRoute';
-import { Unknown } from './Unkwown/Unknown';
+import Unknown from './Unkwown/Unknown';
+import AdminHome from './Admin/Home';
 
 export {
   Welcome,
@@ -23,5 +24,6 @@ export {
   Chat,
   Users,
   Unknown,
+  AdminHome,
   ProtectedRoute,
 };

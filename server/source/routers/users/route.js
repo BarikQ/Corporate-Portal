@@ -2,6 +2,7 @@ import dg from 'debug';
 
 import { User } from '../../controllers';
 import { objectCropper, saltData } from '../../utils';
+import { dataRequests } from '../../constants';
 
 const debug = dg('router:user');
 
@@ -9,8 +10,9 @@ export const get = async (req, res) => {
   debug(`${req.method} - ${req.originalUrl}`);
 
   try {
+    const isAdminRequest = req.query.requested === dataRequests.admin;
     const user = await new User();
-    const data = await user.getUsers();
+    const data = await user.getUsers(isAdminRequest);
 
     res.status(200).json(data);
     return;

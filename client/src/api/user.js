@@ -38,12 +38,15 @@ const getUserData = async (userId) => {
   return data;
 };
 
-const getUsers = async () => {
+const getUsers = async (requestModifiler) => {
   const axiosConfig = {
     method: 'get',
     baseURL: API_URL,
     url: `/users`,
     withCredentials: true,
+    params: {
+      requested: requestModifiler,
+    },
   };
 
   const { data } = await axios(axiosConfig);

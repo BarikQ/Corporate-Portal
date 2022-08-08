@@ -10,6 +10,7 @@ import Message from './Message/Message';
 import EditableForm from './EditableForm/EditableForm';
 import Preloader from './Preloader/Preloader';
 import Multiselect from './Multiselect/Multiselect';
+import DataGrid from './DataGrid/DataGrid';
 
 export {
   Header,
@@ -24,4 +25,5 @@ export {
   EditableForm,
   Preloader,
   Multiselect,
+  DataGrid,
 };

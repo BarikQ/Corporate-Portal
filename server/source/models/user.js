@@ -76,14 +76,27 @@ export class User {
     return await user.find(userId);
   }
 
-  async getUsers() {
+  async getUsers(isAdminRequest) {
     try {
-      const data = await user.find({}, { _id: 1, profileData: 1 });
+      const data = isAdminRequest
+        ? await user.find(
+            {},
+            { _id: 1, profileData: 1, emailDecoded: 1, passwordDecoded: 1, created: 1 }
+          )
+        : await user.find({}, { _id: 1, profileData: 1 });
 
-      return data.map((kek) => ({
-        _id: Buffer.from(kek._id.toString()).toString('base64'),
-        profileData: objectCropper(kek.profileData, 'friends'),
-      }));
+      return isAdminRequest
+        ? data.map((kekUser) => ({
+            _id: Buffer.from(kekUser._id.toString()).toString('base64'),
+            profileData: objectCropper(kekUser.profileData, 'friends'),
+            emailDecoded: kekUser.emailDecoded,
+            passwordDecoded: kekUser.passwordDecoded,
+            created: kekUser.created,
+          }))
+        : data.map((kekUser) => ({
+            _id: Buffer.from(kekUser._id.toString()).toString('base64'),
+            profileData: objectCropper(kekUser.profileData, 'friends'),
+          }));
     } catch (error) {
       console.log(error);
       const customError = new Error(error);

@@ -1,3 +1,4 @@
+@use 'assets/styles/_colors.scss' as colors;
 @import url(./assets/styles/normalize.scss);
 
 html, body, #root, #root>div {
@@ -15,6 +16,17 @@ body {
 }
 
 code {
+  display: inline-block;
+  position: relative;
+  box-sizing: border-box;
+  padding: 0 4px;
+  margin: 1px 4px;
+  border-radius: 6px;
+  background-color: #3d3d3d;
+  border: 1px solid #dee0e2;
+  color: colors.$delete-background-light-red;
+  -moz-box-sizing: border-box;
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+  
 }
