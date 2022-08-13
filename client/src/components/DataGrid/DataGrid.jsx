@@ -1,8 +1,18 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import ReactDataGrid from '@inovua/reactdatagrid-community';
 
-import '@inovua/reactdatagrid-community/index.css';
+import '@inovua/reactdatagrid-enterprise/base.css';
+import '@inovua/reactdatagrid-enterprise/theme/default-light.css';
+import '@inovua/reactdatagrid-enterprise/theme/amber-light.css';
+import '@inovua/reactdatagrid-enterprise/theme/amber-dark.css';
+import '@inovua/reactdatagrid-enterprise/theme/blue-light.css';
+import '@inovua/reactdatagrid-enterprise/theme/blue-dark.css';
+import '@inovua/reactdatagrid-enterprise/theme/default-light.css';
+import '@inovua/reactdatagrid-enterprise/theme/default-dark.css';
+import '@inovua/reactdatagrid-enterprise/theme/green-light.css';
+import '@inovua/reactdatagrid-enterprise/theme/green-dark.css';
+import '@inovua/reactdatagrid-enterprise/theme/pink-light.css';
 import styles from './DataGrid.module.scss';
 
 DataGrid.propTypes = {
@@ -11,14 +21,17 @@ DataGrid.propTypes = {
   handleSelect: PropTypes.func,
   columns: PropTypes.array,
   data: PropTypes.array,
-  editable: PropTypes.bool,
 };
 
 const gridStyle = { minHeight: 550 };
 
-function DataGrid({ handleEdit, handleSelect, columns, data, editable, ...props }) {
+function DataGrid({ handleEdit, handleSelect, columns, data, ...props }) {
   const [selected, setSelected] = useState(null);
   const [dataSource, setDataSource] = useState(data);
+
+  useEffect(() => {
+    setDataSource(data);
+  }, [data]);
 
   const onEditComplete = useCallback(
     ({ value, columnId, rowId }) => {
@@ -50,7 +63,7 @@ function DataGrid({ handleEdit, handleSelect, columns, data, editable, ...props 
         just like in OS file-system explorers (Finder in macOS or Explorer in Windows)
       </div>
       <ReactDataGrid
-        editable
+        theme={'blue-dark'}
         pagination
         idProperty="id"
         columns={columns}

@@ -190,36 +190,6 @@ export default function Form({
                 : ''
             }`}
           />
-          // <Autocomplete
-          //   multiple
-          //   freeSolo
-          //   value={formData[Object.keys(formData)[index]].value}
-          //   id={field.id}
-          //   key={`${field.id}-input`}
-          //   options={field.options.map((option) => option)}
-          //   required={field.required}
-          //   name={field.name}
-          //   className={`multiselect ${prefixClass ? `${prefixClass}-input` : ''} ${
-          //     prefixClass ? `${prefixClass}__multiselect` : ''
-          //   }`}
-          //   onChange={(event, values) => updateState(field.name, values)}
-          //   getOptionLabel={(option) => option}
-          //   filterSelectedOptions
-          //   renderTags={(value, getTagProps) => {
-          //     return value.map((option, index) => (
-          //       <Chip label={option} key={option} {...getTagProps({ index })} />
-          //     ));
-          //   }}
-          //   renderInput={(params) => {
-          //     return (
-          //       <TextField
-          //         {...params}
-          //         label={field.placeholder}
-          //         placeholder={field.multiPlaceholder}
-          //       />
-          //     );
-          //   }}
-          // />
         );
       case 'textarea':
         return (
@@ -404,6 +374,7 @@ export default function Form({
   }
 
   function handlePreSubmit(event, formData) {
+    event.persist();
     event.preventDefault();
 
     const newObj = {};
@@ -422,7 +393,6 @@ export default function Form({
     });
 
     setFormData(newObj);
-
     onFormSubmit(event, formData);
   }
 

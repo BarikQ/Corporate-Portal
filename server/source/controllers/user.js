@@ -19,8 +19,8 @@ export class User {
     return await this.models.user.updateUser(userId, userData);
   }
 
-  async compareUserPasswords(userId, enteredPassword, newPassword) {
-    return await this.models.user.compareUserPasswords(userId, enteredPassword, newPassword);
+  async compareUserPasswords(userId, enteredPassword, isAdminPage) {
+    return await this.models.user.compareUserPasswords(userId, enteredPassword, isAdminPage);
   }
 
   async deleteUser(userId) {

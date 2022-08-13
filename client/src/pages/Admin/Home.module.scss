@@ -1,7 +1,76 @@
+@use 'assets/styles/_colors.scss' as colors;
+
 .admin {
   width: 100%;
 }
 
 .selected {
   text-align: left;
+}
+
+.warningText {
+  color: colors.$error-red;
+}
+
+.deleteIcon {
+  display: flex;
+  padding: 2px;
+  margin: 2px;
+  transition: 0.2s ease all;
+
+  & svg {
+    transition: 0.2s ease all;
+  }
+
+  &:hover {
+    box-shadow: 0 0 1px 1px colors.$error-red;
+
+    & svg {
+      background-color: colors.$error-red;
+      color: white;
+      transition: 0.2s ease all;
+    }
+  }
+}
+
+.editIcon {
+  display: flex;
+  padding: 2px;
+  margin: 2px;
+  transition: 0.2s ease all;
+
+  & svg {
+    transition: 0.2s ease all;
+  }
+
+  &:hover {
+    box-shadow: 0 0 1px 1px colors.$light-blue;
+
+    & svg {
+      background-color: colors.$light-blue;
+      color: white;
+      transition: 0.2s ease all;
+    }
+  }
+}
+
+.saveIcon {
+  display: flex;
+  padding: 2px;
+  margin: 2px;
+  transition: 0.2s ease all;
+
+  & svg {
+    transition: 0.2s ease all;
+  }
+
+  &:hover {
+    box-shadow: 0 0 1px 1px colors.$light-green;
+
+    & svg:hover {
+      background-color: colors.$light-green;
+      color: white;
+      transition: 0.2s ease all;
+    }
+  }
 }

@@ -44,6 +44,7 @@ export default function Multiselect({
       onChange={(event, values) => onChange(field.name, values)}
       getOptionLabel={(option) => option}
       filterSelectedOptions
+      color="third"
       renderTags={(value, getTagProps) => {
         return value.map((option, index) => (
           <Chip label={option} key={option} {...getTagProps({ index })} />

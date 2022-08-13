@@ -1,5 +1,5 @@
 export const API_URL = 'http://localhost:3001';
-export const requestModifiler = {
+export const REQUEST_MODIFIER = {
   admin: 'admin',
   user: 'user',
 };

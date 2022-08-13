@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import { getAccessToken } from '../utils';
 
 import { user } from '../odm';
 
@@ -25,10 +26,7 @@ export class Auth {
         email = await bcrypt.hash(emailDecoded, salt);
         password = await bcrypt.hash(passwordDecoded, salt);
 
-        const newAccessToken = (data.accessToken = `${email.split('').reverse().join('')}:${password
-          .split('')
-          .reverse()
-          .join('')}`);
+        const newAccessToken = getAccessToken(email, password);
 
         return await user.findOneAndUpdate(
           { emailDecoded: emailDecoded },

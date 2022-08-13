@@ -1,4 +1,4 @@
-export const stackOptions = [
+export const STACK_OPTIONS = [
   'JS',
   'HTML',
   'CSS',

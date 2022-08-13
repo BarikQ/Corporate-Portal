@@ -1,7 +1,7 @@
 import dg from 'debug';
 
 import { User } from '../../controllers';
-import { objectCropper, saltData } from '../../utils';
+import { getAccessToken, objectCropper, saltData } from '../../utils';
 import { dataRequests } from '../../constants';
 
 const debug = dg('router:user');
@@ -38,10 +38,7 @@ export const post = async (req, res) => {
     userData.emailDecoded = email;
     userData.password = await saltData(password);
     userData.email = await saltData(email);
-    userData.accessToken = `${userData.email.split('').reverse().join('')}:${userData.password
-      .split('')
-      .reverse()
-      .join('')}`;
+    userData.accessToken = getAccessToken(userData.email, userData.password);
 
     const user = await new User(userData);
     const isUnique = await user.isUnique();

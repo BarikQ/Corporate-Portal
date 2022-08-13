@@ -1,37 +1,55 @@
 import React, { useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 import { useDispatch } from 'react-redux';
 import moment from 'moment';
 
 import { Form, Preloader } from 'components';
 import { getUserData, updateUserData } from 'api';
 import { setAlert, removeError } from 'store/actions';
-import { stackOptions } from 'constants';
+import { STACK_OPTIONS } from 'constants';
 
 import './ProfileSettings.scss';
 
-export default function ProfileSettings() {
+ProfileSettings.propTypes = {
+  isAdminPage: PropTypes.bool,
+  adminData: PropTypes.object,
+  onSuccess: PropTypes.func,
+};
+
+export default function ProfileSettings({ isAdminPage, adminData, onSuccess }) {
   const [isLoading, setIsLoading] = useState(true);
   const [formTemplate, setFormTemplate] = useState(null);
   const currentUserId = localStorage.getItem('x-token');
   const dispatch = useDispatch();
 
   useEffect(async () => {
-    const {
-      profileData: { firstName, surname, birthDate, city, profileImage, technologies },
-    } = await getUserData(currentUserId);
+    let profileData = null,
+      firstName = null,
+      surname = null,
+      birthDate = null,
+      city = null,
+      profileImage = null,
+      technologies = null;
+
+    if (adminData) {
+      ({ firstName, surname, birthDate, city, profileImage, technologies } = adminData);
+    } else {
+      ({ profileData } = await getUserData(currentUserId));
+      ({ firstName, surname, birthDate, city, profileImage, technologies } = profileData);
+    }
 
     setFormTemplate({
       fields: [
         {
           name: 'profileImage',
-          id: 'profileImage',
+          id: `profileImage${adminData?.id && `-${adminData.id}`}`,
           type: 'cropper',
           value: profileImage || '',
         },
         {
           placeholder: 'First Name',
           name: 'firstName',
-          id: 'firstName',
+          id: `firstName${adminData?.id && `-${adminData.id}`}`,
           type: 'text',
           value: firstName || '',
           required: true,
@@ -40,7 +58,7 @@ export default function ProfileSettings() {
         {
           placeholder: 'Surname',
           name: 'surname',
-          id: 'surname',
+          id: `surname${adminData?.id && `-${adminData.id}`}`,
           type: 'text',
           value: surname || '',
           required: true,
@@ -49,14 +67,14 @@ export default function ProfileSettings() {
         {
           placeholder: 'City',
           name: 'city',
-          id: 'city',
+          id: `city${adminData?.id && `-${adminData.id}`}`,
           type: 'text',
           value: city || '',
         },
         {
           placeholder: 'Birth Date',
           name: 'birthDate',
-          id: 'birthDate',
+          id: `birthDate${adminData?.id && `-${adminData.id}`}`,
           type: 'date',
           value: birthDate || moment().format('L'),
         },
@@ -64,30 +82,55 @@ export default function ProfileSettings() {
           placeholder: 'Technologies',
           multiPlaceholder: 'Technology',
           name: 'technologies',
-          id: 'technologies',
+          id: `technologies${adminData?.id && `-${adminData.id}`}`,
           type: 'multi',
-          value: technologies || [],
-          options: stackOptions,
+          value: isAdminPage
+            ? technologies.length > 1
+              ? technologies.split(', ')
+              : []
+            : technologies || [],
+          options: STACK_OPTIONS,
         },
       ],
       button: {
-        id: 'login-submit',
+        id: `login-submit'${adminData?.id && `-${adminData.id}`}`,
         text: 'Save',
         type: 'submit',
         className: 'settings__form-button',
       },
     });
     setIsLoading(false);
-  }, []);
+  }, [adminData]);
 
   async function handleFormSubmit(event, data) {
     event.preventDefault();
 
     try {
-      updateUserData(event, data);
+      await updateUserData(data, adminData.id, isAdminPage);
+      dispatch(
+        setAlert({
+          message: 'User profile was changed successfully',
+          type: 'success',
+        })
+      );
+      console.log(data);
+      const reformedData = JSON.parse(JSON.stringify(data));
+      Object.keys(reformedData).forEach(
+        (key) =>
+          (reformedData[key] = Array.isArray(reformedData[key].value)
+            ? reformedData[key].value.join(', ')
+            : reformedData[key].value)
+      );
+      console.log(reformedData);
+      onSuccess(event, { ...reformedData, id: adminData.id });
     } catch (error) {
-      dispatch(error);
-      console.log(error);
+      const { response } = error;
+      dispatch(
+        setAlert({
+          message: response ? `${response.status}: ${response.data.message}` : error.message,
+          type: 'error',
+        })
+      );
     }
   }
 
