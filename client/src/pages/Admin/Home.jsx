@@ -102,6 +102,7 @@ function AdminHome() {
         name: 'role',
         header: 'Role',
         editor: SelectEditor,
+        editable: false,
         editorProps: {
           idProperty: 'id',
           dataSource: Object.keys(USER_ROLES).map((key) => ({ id: key, label: key })),
@@ -337,7 +338,6 @@ function AdminHome() {
         save: 'Save',
       },
     ]);
-    // console.log(data);
   };
 
   return (

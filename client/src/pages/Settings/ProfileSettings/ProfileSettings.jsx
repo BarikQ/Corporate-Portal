@@ -9,6 +9,7 @@ import { setAlert, removeError } from 'store/actions';
 import { STACK_OPTIONS } from 'constants';
 
 import './ProfileSettings.scss';
+import { ROLES_OPTIONS } from 'constants';
 
 ProfileSettings.propTypes = {
   isAdminPage: PropTypes.bool,
@@ -29,16 +30,17 @@ export default function ProfileSettings({ isAdminPage, adminData, onSuccess }) {
       birthDate = null,
       city = null,
       profileImage = null,
-      technologies = null;
+      technologies = null,
+      role = null;
 
     if (adminData) {
-      ({ firstName, surname, birthDate, city, profileImage, technologies } = adminData);
+      ({ firstName, surname, birthDate, city, profileImage, technologies, role } = adminData);
     } else {
       ({ profileData } = await getUserData(currentUserId));
       ({ firstName, surname, birthDate, city, profileImage, technologies } = profileData);
     }
 
-    setFormTemplate({
+    const template = {
       fields: [
         {
           name: 'profileImage',
@@ -98,9 +100,21 @@ export default function ProfileSettings({ isAdminPage, adminData, onSuccess }) {
         type: 'submit',
         className: 'settings__form-button',
       },
-    });
+    };
+
+    if (isAdminPage)
+      template.fields.push({
+        placeholder: 'Role',
+        name: 'role',
+        id: `role${adminData?.id && `-${adminData.id}`}`,
+        type: 'select',
+        value: role || 'user',
+        options: ROLES_OPTIONS,
+      });
+
+    setFormTemplate(template);
     setIsLoading(false);
-  }, [adminData]);
+  }, [adminData, isAdminPage]);
 
   async function handleFormSubmit(event, data) {
     event.preventDefault();

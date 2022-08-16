@@ -26,9 +26,9 @@ export const putUser = async (req, res) => {
     let { profileImage, password, newPassword, newPasswordRepeat } = userData.profileData;
     const user = new User();
     const userTargetId = Buffer.from(_id || token, 'base64').toString();
-    console.log(_id);
+
+    console.log(userData);
     if (isAdminPage && (newPassword || newPasswordRepeat)) password = true;
-    console.log(isAdminPage);
 
     try {
       if (profileImage) {
@@ -72,7 +72,7 @@ export const putUser = async (req, res) => {
       return res.status(400).json({ message: error.message });
     }
 
-    await user.updateUser(userTargetId, userData);
+    console.log(await user.updateUser(userTargetId, userData));
     if (!isAdminPage) {
       res.setHeader('X-Token', token);
       req.session.user = { token, accessToken: userData.accessToken };

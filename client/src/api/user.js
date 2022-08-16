@@ -14,14 +14,19 @@ const updateUserData = async (
     return accumulator;
   }, {});
 
+  const sendedData = { profileData: data };
+
+  if (isAdminPage) {
+    sendedData.role = data.role;
+    delete data.role;
+  }
+
   const axiosConfig = {
     method: 'put',
     baseURL: API_URL,
     url: `/users/${userId}`,
     withCredentials: true,
-    data: {
-      profileData: data,
-    },
+    data: sendedData,
     params: {
       isAdminPage,
     },

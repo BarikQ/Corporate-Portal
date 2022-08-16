@@ -21,7 +21,7 @@ const signUpRequest = async (event, formData, isAdminPage = false) => {
     return accumulator;
   }, {});
 
-  data.role = btoa('user');
+  if (!isAdminPage) data.role = btoa('user');
   console.log(formData, data);
   const axiosConfig = {
     method: 'post',

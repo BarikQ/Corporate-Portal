@@ -11,6 +11,7 @@ import { SocketContext } from 'context/socket';
 import { STACK_OPTIONS } from 'constants';
 
 import './Welcome.scss';
+import { ROLES_OPTIONS } from 'constants';
 
 const signInFormTemplate = {
   fields: [
@@ -196,6 +197,14 @@ const adminSignUpTemplate = {
       id: `profileImage`,
       type: 'cropper',
       value: '',
+    },
+    {
+      placeholder: 'Role',
+      name: 'role',
+      id: 'role',
+      type: 'select',
+      value: 'user',
+      options: ROLES_OPTIONS,
     },
   ],
   button: {

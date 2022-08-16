@@ -172,7 +172,7 @@ function App() {
           {alert ? (
             <Snackbar
               open={isSnackbarOpen}
-              autoHideDuration={50000}
+              autoHideDuration={10000}
               onClose={closeSnackbar}
               key={alert}
               anchorOrigin={{
