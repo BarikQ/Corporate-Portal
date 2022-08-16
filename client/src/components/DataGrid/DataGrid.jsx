@@ -58,10 +58,6 @@ function DataGrid({ handleEdit, handleSelect, columns, data, ...props }) {
 
   return (
     <>
-      <div className={styles.hint}>
-        You can use <code>click</code>, <code>ctrl/cmd + click</code> or <code>shift + click</code>{' '}
-        just like in OS file-system explorers (Finder in macOS or Explorer in Windows)
-      </div>
       <ReactDataGrid
         theme={'blue-dark'}
         pagination
@@ -73,6 +69,10 @@ function DataGrid({ handleEdit, handleSelect, columns, data, ...props }) {
         onSelectionChange={onSelectionChange}
         {...props}
       />
+      <div className={styles.hint}>
+        You can use <code>click</code>, <code>ctrl/cmd + click</code> or <code>shift + click</code>{' '}
+        just like in OS file-system explorers (Finder in macOS or Explorer in Windows)
+      </div>
     </>
   );
 }

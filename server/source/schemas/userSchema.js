@@ -24,6 +24,15 @@ export const createUser = {
       pattern: "^[a-zA-Z ,.'-]+$",
       errorMessage: 'Only english letters allowed',
     },
+    profileImage: {
+      type: 'string',
+    },
+    technologies: {
+      type: 'array',
+    },
+    role: {
+      type: 'string',
+    },
     password: {
       type: 'string',
       minLength: 6,

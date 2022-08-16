@@ -106,7 +106,7 @@ export default function ProfileSettings({ isAdminPage, adminData, onSuccess }) {
     event.preventDefault();
 
     try {
-      await updateUserData(data, adminData.id, isAdminPage);
+      await updateUserData(data, adminData?.id, isAdminPage);
       dispatch(
         setAlert({
           message: 'User profile was changed successfully',
@@ -114,15 +114,19 @@ export default function ProfileSettings({ isAdminPage, adminData, onSuccess }) {
         })
       );
       console.log(data);
-      const reformedData = JSON.parse(JSON.stringify(data));
-      Object.keys(reformedData).forEach(
-        (key) =>
-          (reformedData[key] = Array.isArray(reformedData[key].value)
-            ? reformedData[key].value.join(', ')
-            : reformedData[key].value)
-      );
-      console.log(reformedData);
-      onSuccess(event, { ...reformedData, id: adminData.id });
+      if (adminData) {
+        const reformedData = JSON.parse(JSON.stringify(data));
+
+        Object.keys(reformedData).forEach(
+          (key) =>
+            (reformedData[key] = Array.isArray(reformedData[key].value)
+              ? reformedData[key].value.join(', ')
+              : reformedData[key].value)
+        );
+
+        console.log(reformedData);
+        onSuccess(event, { ...reformedData, id: adminData.id });
+      }
     } catch (error) {
       const { response } = error;
       dispatch(

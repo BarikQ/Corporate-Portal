@@ -26,14 +26,15 @@ export const post = async (req, res) => {
   debug(`${req.method} - ${req.originalUrl}`);
 
   try {
+    const { isAdminPage } = req.query;
     const userData = req.body;
-    const { email, firstName, surname, birthDate, city, password, passwordRepeat, role } = userData;
+    const { email, firstName, surname, birthDate, city, profileImage, technologies, password, passwordRepeat, role } = userData;
 
     if (password !== passwordRepeat) {
       throw new Error(JSON.stringify({ passwordRepeat: "Passwords didn't match" }));
     }
 
-    userData.profileData = { firstName, surname, birthDate, city };
+    userData.profileData = { firstName, surname, birthDate, city, profileImage, technologies };
     userData.passwordDecoded = password;
     userData.emailDecoded = email;
     userData.password = await saltData(password);
@@ -47,16 +48,21 @@ export const post = async (req, res) => {
       throw new Error(JSON.stringify({ email: 'User with this email already exists' }));
     }
 
+    // setTimeout(() => {res.sendStatus(400)}, 5000);
     const data = await user.create();
-    const token = Buffer.from(data._id.toString()).toString('base64');
 
-    res.setHeader('X-Token', token);
-    req.session.user = { token: token, accessToken: userData.accessToken };
-
-    res.status(200).json({ message: 'You have been sign up' });
-    return;
+    if (!isAdminPage) {
+      const token = Buffer.from(data._id.toString()).toString('base64');
+  
+      res.setHeader('X-Token', token);
+      req.session.user = { token: token, accessToken: userData.accessToken };
+      return res.status(200).json({ message: 'You have been sign up' })
+    } else {
+      console.log(data);
+      const { _id, profileData, emailDecoded, passwordDecoded, created, role } = data;
+      return res.status(200).json({ id: _id, profileData, emailDecoded, passwordDecoded, created, role });
+    }
   } catch (error) {
-    res.status(400).json({ message: error.message });
-    return;
+    return res.status(400).json({ message: error.message });
   }
 };

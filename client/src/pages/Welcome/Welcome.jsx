@@ -1,12 +1,14 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import PropTypes from 'prop-types';
 import moment from 'moment';
 
-import { Form } from 'components';
+import { Form, Preloader } from 'components';
 import { signUpRequest, signInRequest } from 'api/auth';
-import { connect, setListener, getSocket } from 'store/actions';
+import { connect, setListener, getSocket, setAlert } from 'store/actions';
 import { SocketContext } from 'context/socket';
+import { STACK_OPTIONS } from 'constants';
 
 import './Welcome.scss';
 
@@ -37,7 +39,7 @@ const signInFormTemplate = {
   },
 };
 
-const signUpFormTemplate = {
+const signUpTemplate = {
   fields: [
     {
       placeholder: 'First Name',
@@ -114,10 +116,109 @@ const signUpFormTemplate = {
   },
 };
 
-function Welcome() {
+const adminSignUpTemplate = {
+  fields: [
+    {
+      placeholder: 'First Name',
+      name: 'firstName',
+      id: `firstName`,
+      type: 'text',
+      value: '',
+      required: true,
+      validation: 'name',
+    },
+    {
+      placeholder: 'Surname',
+      name: 'surname',
+      id: `surname`,
+      type: 'text',
+      value: '',
+      required: true,
+      validation: 'name',
+    },
+    {
+      placeholder: 'Email',
+      name: 'email',
+      id: 'signup-email',
+      type: 'email',
+      autocomplete: 'new-password',
+      value: '',
+      validation: 'email',
+      required: true,
+    },
+    {
+      placeholder: 'Password',
+      name: 'password',
+      id: 'signup-password',
+      type: 'password',
+      autocomplete: 'new-password',
+      value: '',
+      validation: 'password',
+      repeatFor: 'passwordRepeat',
+      required: true,
+    },
+    {
+      placeholder: 'Repeat password',
+      name: 'passwordRepeat',
+      id: 'signup-password-repeat',
+      type: 'password',
+      autocomplete: 'new-password',
+      value: '',
+      validation: 'password-repeat',
+      repeatFor: 'password',
+      required: true,
+    },
+    {
+      placeholder: 'City',
+      name: 'city',
+      id: `city`,
+      type: 'text',
+      value: '',
+    },
+    {
+      placeholder: 'Birth Date',
+      name: 'birthDate',
+      id: `birthDate`,
+      type: 'date',
+      value: moment().format('L'),
+    },
+    {
+      placeholder: 'Technologies',
+      multiPlaceholder: 'Technology',
+      name: 'technologies',
+      id: `technologies`,
+      type: 'multi',
+      value: [],
+      options: STACK_OPTIONS,
+    },
+    {
+      name: 'profileImage',
+      id: `profileImage`,
+      type: 'cropper',
+      value: '',
+    },
+  ],
+  button: {
+    id: `login-submit'`,
+    text: 'Create user',
+    type: 'submit',
+    className: 'settings__form-button',
+  },
+};
+
+Welcome.propTypes = {
+  isAdminPage: PropTypes.bool,
+  onSuccess: PropTypes.func,
+};
+
+function Welcome({ isAdminPage, onSuccess }) {
+  const [isLoading, setIsLoading] = useState(false);
   const [signInDisplay, setSignInDisplay] = useState(true);
   const [signUpErrors, setSignUpErrors] = useState(null);
   const [signInErrors, setSignInErrors] = useState(null);
+  const [signUpFormTemplate, setSignUpFormTemplate] = useState(
+    isAdminPage ? adminSignUpTemplate : signUpTemplate
+  );
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const socket = useContext(SocketContext);
@@ -160,33 +261,59 @@ function Welcome() {
     event.preventDefault();
 
     try {
-      const response = await signUpRequest(event, formData);
-      setSignUpErrors(null);
-      localStorage.setItem('x-token', response.headers['x-token']);
+      setIsLoading((prev) => true);
+      const response = await signUpRequest(event, formData, isAdminPage);
+      console.log(response);
 
-      navigate('/settings/profile');
+      setSignUpErrors(null);
+      setIsLoading((prev) => false);
+
+      if (!isAdminPage) {
+        localStorage.setItem('x-token', response.headers['x-token']);
+
+        navigate('/settings/profile');
+      } else {
+        dispatch(
+          setAlert({
+            message: 'User was created successfully',
+            type: 'success',
+          })
+        );
+        onSuccess(event, response.data);
+      }
     } catch (error) {
+      setIsLoading((prev) => false);
+      const { response } = error;
+
+      dispatch(
+        setAlert({
+          message: response ? `${response.status}: ${response.data.message}` : error.message,
+          type: 'error',
+        })
+      );
+
       if (error.response) {
         const { status, data } = error.response;
         const errors = JSON.parse(data.message);
 
         setSignUpErrors(errors);
-        console.log(status, errors);
-      } else {
-        console.error(error);
       }
     }
   }
 
   return (
     <div className="welcome">
-      <h1 className="welcome__title">Welcome to iTechArt!</h1>
+      {isAdminPage && isLoading && (
+        <Preloader isLoading prefix="welcome" text="Request being processed" />
+      )}
+      <h1 className="welcome__title">
+        {isAdminPage ? 'Add user to iTechArt' : 'Welcome to iTechArt!'}
+      </h1>
       <span>iTechArt corporate network</span>
-
       <div className="welcome__wrapper">
         <div className="welcome__sign">
           <>
-            {signInDisplay ? (
+            {!isAdminPage && signInDisplay ? (
               <>
                 <Form
                   className="welcome__form"
@@ -216,15 +343,17 @@ function Welcome() {
                   formFieldsErrors={signUpErrors}
                   key={'signUpForm'}
                 />
-                <a
-                  className="welcome__switch-link"
-                  href="#"
-                  onClick={(event) => {
-                    event.preventDefault();
-                    setSignInDisplay(true);
-                  }}>
-                  Already have an account? Sign in.
-                </a>
+                {!isAdminPage && (
+                  <a
+                    className="welcome__switch-link"
+                    href="#"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      setSignInDisplay(true);
+                    }}>
+                    Already have an account? Sign in.
+                  </a>
+                )}
               </>
             )}
           </>

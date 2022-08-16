@@ -1,22 +1,24 @@
 /* eslint-disable react/prop-types */
 import React, { useEffect, useState, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
+
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
+
 import BoolEditor from '@inovua/reactdatagrid-community/BoolEditor';
 import DateEditor from '@inovua/reactdatagrid-community/DateEditor';
 import NumericEditor from '@inovua/reactdatagrid-community/NumericEditor';
 import SelectEditor from '@inovua/reactdatagrid-community/SelectEditor';
 
+import { AccountSettings, ProfileSettings, Welcome } from 'pages';
 import { User, Preloader, Form, DataGrid, Prompt, Multiselect } from 'components';
 import { deleteUser, getUserData, getUsers } from 'api';
 import { setAlert } from 'store/actions';
-import { REQUEST_MODIFIER, USER_ROLES } from 'constants';
+import { REQUEST_MODIFIER, USER_ROLES, STACK_OPTIONS } from 'constants';
 
 import styles from './Home.module.scss';
-import { AccountSettings, ProfileSettings } from 'pages';
-import { STACK_OPTIONS } from 'constants';
 
 function DeleteHandler({ onClick }) {
   return (
@@ -53,6 +55,14 @@ function DeletePromptContent() {
       Are you sure you want to delete this user?
       <br /> <span className={styles.warningText}>This action is irreversible.</span>
     </span>
+  );
+}
+
+function AddPersonHandler({ onClick }) {
+  return (
+    <button onClick={onClick} className={styles.addPerson}>
+      <PersonAddIcon />
+    </button>
   );
 }
 
@@ -302,9 +312,47 @@ function AdminHome() {
     setSelected(selected);
   };
 
+  const handleUserCreation = ({
+    _id,
+    profileData: { firstName, surname, city, birthDate, technologies, profileImage },
+    emailDecoded,
+    created,
+    role,
+  }) => {
+    setUsers([
+      ...users,
+      {
+        id: _id,
+        firstName,
+        surname,
+        emailDecoded,
+        city,
+        birthDate,
+        technologies: technologies.join(', '),
+        profileImage,
+        created: new Date(created).toLocaleDateString('en-US'),
+        role,
+        password: 'Password',
+        delete: 'Delete',
+        save: 'Save',
+      },
+    ]);
+    // console.log(data);
+  };
+
   return (
     <div className={`${styles.admin} page__block`}>
-      Hello there
+      <div className={styles.controls}>
+        <Prompt
+          dialogTitle={'Create new user'}
+          onConfirm={handleUserCreation}
+          Handler={AddPersonHandler}
+          DialogPromptComponent={Welcome}
+          DialogPromptComponentParams={{ isAdminPage: true }}
+          cancelText={'Cancel'}
+          isConfirmButton={false}
+        />
+      </div>
       {users ? (
         <>
           <DataGrid
@@ -314,6 +362,7 @@ function AdminHome() {
             handleSelect={handleSelect}
             multiSelect
             editable
+            className={styles.grid}
           />
           <p className={styles.selected}>
             Selected users: {selected == null ? 'none' : JSON.stringify(selected)}.

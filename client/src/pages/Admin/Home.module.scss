@@ -4,6 +4,15 @@
   width: 100%;
 }
 
+.controls {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.grid {
+  margin-top: 16px;
+}
+
 .selected {
   text-align: left;
 }
@@ -70,6 +79,32 @@
     & svg:hover {
       background-color: colors.$light-green;
       color: white;
+      transition: 0.2s ease all;
+    }
+  }
+}
+
+.addPerson {
+  width: 50px;
+  height: 50px;
+  padding: 8px;
+  border: 1px solid white;
+  border-radius: 50%;
+  background-color: transparent;
+  transition: 0.2s ease all;
+  cursor: pointer;
+
+  path {
+    color: white;
+    transition: 0.2s ease all;
+  }
+
+  &:hover {
+    background-color: white;
+    transition: 0.2s ease all;
+
+    path {
+      color: black;
       transition: 0.2s ease all;
     }
   }
