@@ -62,10 +62,10 @@ export class User {
     });
   }
 
-  async compareUserPasswords(userId, enteredPassword, newPassword) {
+  async compareUserPasswords(userId, enteredPassword, isAdminPage) {
     const { password, email } = await user.findOne({ _id: userId }, { password: 1, email: 1 });
 
-    return (await bcrypt.compare(enteredPassword, password)) ? { email } : false;
+    return isAdminPage ? { email } : (await bcrypt.compare(enteredPassword, password)) ? { email } : false;
   }
 
   async deleteUser(userId) {
@@ -76,14 +76,25 @@ export class User {
     return await user.find(userId);
   }
 
-  async getUsers() {
+  async getUsers(isAdminRequest) {
     try {
-      const data = await user.find({}, { _id: 1, profileData: 1 });
+      const data = isAdminRequest
+        ? await user.find({}, { _id: 1, profileData: 1, emailDecoded: 1, passwordDecoded: 1, created: 1, role: 1 })
+        : await user.find({}, { _id: 1, profileData: 1 });
 
-      return data.map((kek) => ({
-        _id: Buffer.from(kek._id.toString()).toString('base64'),
-        profileData: objectCropper(kek.profileData, 'friends'),
-      }));
+      return isAdminRequest
+        ? data.map((kekUser) => ({
+            _id: Buffer.from(kekUser._id.toString()).toString('base64'),
+            profileData: objectCropper(kekUser.profileData, 'friends'),
+            emailDecoded: kekUser.emailDecoded,
+            passwordDecoded: kekUser.passwordDecoded,
+            created: kekUser.created,
+            role: kekUser.role,
+          }))
+        : data.map((kekUser) => ({
+            _id: Buffer.from(kekUser._id.toString()).toString('base64'),
+            profileData: objectCropper(kekUser.profileData, 'friends'),
+          }));
     } catch (error) {
       console.log(error);
       const customError = new Error(error);
@@ -106,10 +117,7 @@ export class User {
 
   async getUserChats(userId) {
     try {
-      const { chats } = await user.findOne(
-        { _id: Buffer.from(userId, 'base64').toString() },
-        { chats: 1 }
-      );
+      const { chats } = await user.findOne({ _id: Buffer.from(userId, 'base64').toString() }, { chats: 1 });
 
       if (chats) {
         const data = await Promise.all(
@@ -151,16 +159,10 @@ export class User {
   }
 
   async getChatMessages(userId, chatId) {
-    const currentUser = await user.findOne(
-      { _id: Buffer.from(userId, 'base64').toString() },
-      { profileData: 1, chats: 1 }
-    );
+    const currentUser = await user.findOne({ _id: Buffer.from(userId, 'base64').toString() }, { profileData: 1, chats: 1 });
 
     if (!currentUser.chats || !currentUser.chats.get(chatId)) {
-      const { _id, profileData } = await user.findOne(
-        { _id: Buffer.from(chatId, 'base64').toString() },
-        { profileData: 1 }
-      );
+      const { _id, profileData } = await user.findOne({ _id: Buffer.from(chatId, 'base64').toString() }, { profileData: 1 });
 
       const data = {
         id: chatId,
@@ -187,23 +189,17 @@ export class User {
       const { users, id, name, messages } = chat;
       const usersId = users.map((user, index) => Buffer.from(user, 'base64').toString());
 
-      const chatUsersData = await user.find(
-        { _id: { $in: usersId } },
-        { 'profileData.profileImage': 1, 'profileData.firstName': 1, 'profileData.surname': 1 }
-      );
+      const chatUsersData = await user.find({ _id: { $in: usersId } }, { 'profileData.profileImage': 1, 'profileData.firstName': 1, 'profileData.surname': 1 });
 
-      const sortedChatUsersData = chatUsersData.reduce(
-        (newObject, { _id, profileData: { firstName, surname, profileImage } }) => {
-          newObject[Buffer.from(_id.toString()).toString('base64')] = {
-            firstName: firstName,
-            surname: surname,
-            profileImage: profileImage,
-          };
+      const sortedChatUsersData = chatUsersData.reduce((newObject, { _id, profileData: { firstName, surname, profileImage } }) => {
+        newObject[Buffer.from(_id.toString()).toString('base64')] = {
+          firstName: firstName,
+          surname: surname,
+          profileImage: profileImage,
+        };
 
-          return newObject;
-        },
-        {}
-      );
+        return newObject;
+      }, {});
 
       return {
         id: chatId,
@@ -237,33 +233,19 @@ export class User {
         },
       };
 
-      const sender = await user.findOne(
-        { _id: senderDecodedId },
-        { profileData: 1, chats: 1 },
-        (error, user) => {
-          user = addMessageCb(error, user, receiverId, message);
-        }
-      );
-      const receiver = await user.findOne(
-        { _id: receiverDecodedId },
-        { profileData: 1, chats: 1 },
-        (error, user) => {
-          user = addMessageCb(error, user, senderId, message);
-        }
-      );
+      const sender = await user.findOne({ _id: senderDecodedId }, { profileData: 1, chats: 1 }, (error, user) => {
+        user = addMessageCb(error, user, receiverId, message);
+      });
+      const receiver = await user.findOne({ _id: receiverDecodedId }, { profileData: 1, chats: 1 }, (error, user) => {
+        user = addMessageCb(error, user, senderId, message);
+      });
 
       const senderUpdatedChat = await user.findOne({ _id: senderDecodedId }, { chats: 1 });
       const receiverUpdatedChat = await user.findOne({ _id: receiverDecodedId }, { chats: 1 });
 
       return {
-        senderMessage:
-          senderUpdatedChat.chats.get(receiverId).messages[
-            senderUpdatedChat.chats.get(receiverId).messages.length - 1
-          ],
-        receiverMessage:
-          receiverUpdatedChat.chats.get(senderId).messages[
-            receiverUpdatedChat.chats.get(senderId).messages.length - 1
-          ],
+        senderMessage: senderUpdatedChat.chats.get(receiverId).messages[senderUpdatedChat.chats.get(receiverId).messages.length - 1],
+        receiverMessage: receiverUpdatedChat.chats.get(senderId).messages[receiverUpdatedChat.chats.get(senderId).messages.length - 1],
       };
     } catch (error) {
       console.log(error);
@@ -296,10 +278,7 @@ export class User {
     const userIdDecoded = Buffer.from(userId, 'base64').toString();
     const friendIdDecoded = Buffer.from(friendId, 'base64').toString();
 
-    const currentUser = await user.updateOne(
-      { _id: userIdDecoded },
-      { $pull: { friends: friendId } }
-    );
+    const currentUser = await user.updateOne({ _id: userIdDecoded }, { $pull: { friends: friendId } });
     const friend = await user.updateOne({ _id: friendIdDecoded }, { $pull: { friends: userId } });
   }
 }

@@ -92,13 +92,6 @@ export default function ImageCropper({ value, defaultSrc, onChange, className, .
           <button
             className="button--default image-cropper__button"
             type="button"
-            onClick={getCropData}>
-            Use this image
-          </button>
-
-          <button
-            className="button--default image-cropper__button"
-            type="button"
             onClick={resetImage}>
             Set default image
           </button>

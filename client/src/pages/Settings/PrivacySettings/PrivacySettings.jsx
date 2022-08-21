@@ -26,7 +26,7 @@ export default function PrivacySettings() {
     event.preventDefault();
 
     try {
-      updateUserData(event, data);
+      updateUserData(data);
     } catch (error) {
       dispatch(error);
       console.log(error);

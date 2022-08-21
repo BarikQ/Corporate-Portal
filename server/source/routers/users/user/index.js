@@ -1,6 +1,6 @@
 import cloudinary from 'cloudinary';
 
-import { saltData, sessionOptions } from '../../../utils';
+import { getAccessToken, saltData, sessionOptions } from '../../../utils';
 import { User } from '../../../controllers';
 
 const cloudinaryRoute = 'iTechArt/Portal/Users';
@@ -22,9 +22,13 @@ export const putUser = async (req, res) => {
     const userData = req.body;
     const { token, role, accessToken } = req.session.user;
     const _id = req.params.id;
+    const { isAdminPage } = req.query;
     let { profileImage, password, newPassword, newPasswordRepeat } = userData.profileData;
     const user = new User();
     const userTargetId = Buffer.from(_id || token, 'base64').toString();
+
+    console.log(userData);
+    if (isAdminPage && (newPassword || newPasswordRepeat)) password = true;
 
     try {
       if (profileImage) {
@@ -53,27 +57,26 @@ export const putUser = async (req, res) => {
       if (password && newPassword && newPasswordRepeat) {
         if (newPassword !== newPasswordRepeat) throw new Error('Passwords mismatch');
         if (!/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,32}/.test(newPassword))
-          throw new Error(
-            'Must contain at least one number and one uppercase and lowercase letter, and at 6-32 characters'
-          );
+          throw new Error('Must contain at least one number and one uppercase and lowercase letter, and at 6-32 characters');
 
-        const { email } = await user.compareUserPasswords(userTargetId, password);
+        const { email } = await user.compareUserPasswords(userTargetId, password, isAdminPage);
         if (!email) throw new Error('The current password is entered incorrectly');
 
         userData.passwordDecoded = newPassword;
         userData.password = await saltData(newPassword);
 
-        userData.accessToken = `${email.split('').reverse().join('')}:${userData.password
-          .split('')
-          .reverse()
-          .join('')}`;
+        userData.accessToken = getAccessToken(email, userData.password);
       }
     } catch (error) {
       console.log(error);
       return res.status(400).json({ message: error.message });
     }
 
-    await user.updateUser(userTargetId, userData);
+    console.log(await user.updateUser(userTargetId, userData));
+    if (!isAdminPage) {
+      res.setHeader('X-Token', token);
+      req.session.user = { token, accessToken: userData.accessToken };
+    }
 
     res.sendStatus(200);
     return;
@@ -86,18 +89,24 @@ export const putUser = async (req, res) => {
 
 export const deleteUser = async (req, res) => {
   try {
+    console.log(req.params);
     const { token } = req.session.user;
-    const _id = req.params.chatId;
+    const _id = req.params.id;
     const userTargetId = Buffer.from(_id || token, 'base64').toString();
     const user = new User();
+    // throw new Error('zalipa');
 
     user.deleteUser(userTargetId);
 
-    req.session.destroy(function () {
-      req.session = null;
-    });
+    if (userTargetId === token) {
+      req.session.destroy(function () {
+        req.session = null;
+      });
 
-    res.clearCookie('user', sessionOptions).sendStatus(204);
+      res.clearCookie('user', sessionOptions).sendStatus(204);
+    } else {
+      res.sendStatus(204);
+    }
   } catch (error) {
     res.status(400).json({ message: error.message });
   }

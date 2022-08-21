@@ -22,6 +22,7 @@ const generateSignature = async (data) => {
 export const login = async (req, res) => {
   try {
     const { authorization } = req.headers;
+    console.log(authorization)
     if (!authorization) return res.status(401).json({ message: 'no auth header' });
 
     const auth = await new Auth(authorization);

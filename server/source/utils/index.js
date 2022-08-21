@@ -11,3 +11,4 @@ export { objectCropper } from './objectCropper';
 export { objectIterator } from './objectIterator';
 export { fileUploader } from './fileUploader';
 export { saltData } from './saltData';
+export { getAccessToken } from './getAccessToken';

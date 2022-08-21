@@ -11,7 +11,7 @@ const mongooseOptions = {
   useNewUrlParser: true,
 };
 
-const connection = mongoose.connect(`${CLEVER_CLOUD}/${DB_NAME}?retryWrites=true`, mongooseOptions);
+const connection = mongoose.connect(`${CLEVER_CLOUD}/${DB_NAME}?retryWrites=true&replicaSet=rs0&w=majority`, mongooseOptions);
 
 connection
   .then(() => {

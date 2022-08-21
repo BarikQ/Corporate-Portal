@@ -18,6 +18,7 @@ import {
   Chat,
   Users,
   Unknown,
+  AdminHome,
   ProtectedRoute,
 } from './pages';
 import { Header, Navigation } from './components';
@@ -39,6 +40,9 @@ const theme = createTheme({
     },
     secondary: {
       main: '#FFFFFF',
+    },
+    third: {
+      main: 'red',
     },
   },
 });
@@ -66,6 +70,11 @@ function App() {
       root: 'settings',
       path: 'settings/profile',
       title: 'Settings',
+    },
+    {
+      root: 'admin',
+      path: 'admin',
+      title: 'Admin',
     },
   ];
   const accessValue = useSelector((state) => state.access.value);
@@ -123,46 +132,47 @@ function App() {
       <ThemeProvider theme={theme}>
         <div className={`app ${location.pathname === '/' ? 'app--welcome' : ''}`}>
           <Header />
-          <main className="main">
-            {location.pathname === '/' ? null : (
+          <main className={`main ${location.pathname.includes('/admin') ? 'main--admin' : ''}`}>
+            {location.pathname === '/' || location.pathname.includes('/admin') ? null : (
               <div className="main__nav sidebar">
                 <Navigation routes={mainLinks} />
               </div>
             )}
-            <div className="main__body" key={'gdfg'}>
-              <Routes key={'routes'}>
-                <Route element={<ProtectedRoute />}>
-                  <Route path="im" element={<Messenger />} />
+            <Routes key={'routes'}>
+              <Route element={<ProtectedRoute />}>
+                <Route path="im" element={<Messenger />} />
+              </Route>
+              <Route element={<ProtectedRoute />}>
+                <Route path="/:profileId" element={<Profile />} />
+              </Route>
+              <Route element={<ProtectedRoute />}>
+                <Route path="friends" element={<Friends />} />
+              </Route>
+              <Route element={<ProtectedRoute />}>
+                <Route path="users" element={<Users />} />
+              </Route>
+              <Route element={<ProtectedRoute />}>
+                <Route path="settings" element={<Settings />}>
+                  <Route path="profile" element={<ProfileSettings />} />
+                  <Route path="account" element={<AccountSettings />} />
+                  <Route path="privacy" element={<PrivacySettings />} />
                 </Route>
-                <Route element={<ProtectedRoute />}>
-                  <Route path="/:profileId" element={<Profile />} />
-                </Route>
-                <Route element={<ProtectedRoute />}>
-                  <Route path="friends" element={<Friends />} />
-                </Route>
-                <Route element={<ProtectedRoute />}>
-                  <Route path="users" element={<Users />} />
-                </Route>
-                <Route element={<ProtectedRoute />}>
-                  <Route path="settings" element={<Settings />}>
-                    <Route path="profile" element={<ProfileSettings />} />
-                    <Route path="account" element={<AccountSettings />} />
-                    <Route path="privacy" element={<PrivacySettings />} />
-                  </Route>
-                </Route>
-                <Route element={<ProtectedRoute />}>
-                  <Route path="im/:chatId" element={<Chat />} />
-                </Route>
-                <Route path="/" element={<Welcome />} />
-                <Route path="*" element={<Unknown />} />
-              </Routes>
-            </div>
+              </Route>
+              <Route element={<ProtectedRoute />}>
+                <Route path="admin" element={<AdminHome />} />
+              </Route>
+              <Route element={<ProtectedRoute />}>
+                <Route path="im/:chatId" element={<Chat />} />
+              </Route>
+              <Route path="/" element={<Welcome />} />
+              <Route path="*" element={<Unknown />} />
+            </Routes>
           </main>
           <footer className="footer">Footer</footer>
           {alert ? (
             <Snackbar
               open={isSnackbarOpen}
-              autoHideDuration={50000}
+              autoHideDuration={10000}
               onClose={closeSnackbar}
               key={alert}
               anchorOrigin={{

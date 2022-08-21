@@ -177,7 +177,7 @@ function Profile() {
     <div className="profile">
       <div className="profile__column profile__column--narrow">
         <div className="profile__photo page__block">
-          <div className="profile__photo-wrapper">
+          <div className="profile__photo-wrapper border--bottom--grey">
             <img className="profile__photo-image" src={userData?.profileImage} />
           </div>
 

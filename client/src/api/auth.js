@@ -13,21 +13,24 @@ const authRequest = async () => {
   return await axios(axiosConfig);
 };
 
-const signUpRequest = async (event, formData) => {
+const signUpRequest = async (event, formData, isAdminPage = false) => {
   event.preventDefault();
-  console.log(formData);
+
   const data = Object.keys(formData).reduce((accumulator, key, index) => {
     accumulator[key] = btoa(formData[key].value);
     return accumulator;
   }, {});
 
-  data.role = btoa('user');
-
+  if (!isAdminPage) data.role = btoa('user');
+  console.log(formData, data);
   const axiosConfig = {
     method: 'post',
     baseURL: API_URL,
     url: '/users',
     withCredentials: true,
+    params: {
+      isAdminPage,
+    },
     data,
   };
 

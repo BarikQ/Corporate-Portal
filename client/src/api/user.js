@@ -2,9 +2,11 @@ import axios from 'axios';
 
 import { API_URL } from 'constants';
 
-const updateUserData = async (event, formData) => {
-  event.preventDefault();
-
+const updateUserData = async (
+  formData,
+  userId = localStorage.getItem('x-token'),
+  isAdminPage = false
+) => {
   const data = Object.keys(formData).reduce((accumulator, key, index) => {
     if (!Array.isArray(formData[key].value)) accumulator[key] = btoa(formData[key].value);
     else accumulator[key] = formData[key].value.map((item) => btoa(item));
@@ -12,13 +14,21 @@ const updateUserData = async (event, formData) => {
     return accumulator;
   }, {});
 
+  const sendedData = { profileData: data };
+
+  if (isAdminPage) {
+    sendedData.role = data.role;
+    delete data.role;
+  }
+
   const axiosConfig = {
     method: 'put',
     baseURL: API_URL,
-    url: `/users/${localStorage.getItem('x-token')}`,
+    url: `/users/${userId}`,
     withCredentials: true,
-    data: {
-      profileData: data,
+    data: sendedData,
+    params: {
+      isAdminPage,
     },
   };
 
@@ -38,12 +48,15 @@ const getUserData = async (userId) => {
   return data;
 };
 
-const getUsers = async () => {
+const getUsers = async (requestModifiler) => {
   const axiosConfig = {
     method: 'get',
     baseURL: API_URL,
     url: `/users`,
     withCredentials: true,
+    params: {
+      requested: requestModifiler,
+    },
   };
 
   const { data } = await axios(axiosConfig);
@@ -51,7 +64,7 @@ const getUsers = async () => {
   return data;
 };
 
-const deleteUser = async (userId = 'unknown') => {
+const deleteUser = async (userId = 'unset') => {
   const axiosConfig = {
     method: 'delete',
     baseURL: API_URL,

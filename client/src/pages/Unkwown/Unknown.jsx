@@ -1,5 +1,7 @@
 import React from 'react';
 
-export function Unknown() {
+function Unknown() {
   return <h2>Page not found </h2>;
 }
+
+export default Unknown;
