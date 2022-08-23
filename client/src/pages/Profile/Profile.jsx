@@ -3,9 +3,9 @@ import { Link, useParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 
 import { User, LabeledItem, Post, EditableForm, Preloader } from 'components';
-import { getUserData, addUserFriend, deleteUserFriend } from 'api';
+import { getUserData, addUserFriend, deleteUserFriend, createUserPost } from 'api';
 import { setAlert, removeAlert } from 'store/actions';
-import { UserTypes } from './../../constants/enum.ts';
+import { USER_TYPES } from 'constants';
 import { calculateAge } from 'utils';
 import { useToken } from 'hooks';
 
@@ -60,6 +60,8 @@ function Profile() {
   const { profileId } = useParams();
   const { token } = useToken();
   const [userData, setUserData] = useState(null);
+  const [posts, setPosts] = useState(null);
+  // console.log(userData);
   const [friends, setFriends] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const dispatch = useDispatch();
@@ -71,10 +73,22 @@ function Profile() {
 
   async function getProfileData(id) {
     try {
-      const { profileData, friends } = await getUserData(profileId);
+      const { profileData, friends, posts } = await getUserData(profileId);
       setUserData(profileData);
       setFriends(friends);
+      console.log(posts);
+      setPosts(posts);
       setIsLoading(false);
+      console.log(
+        Object.keys(posts).sort((keyA, keyB) => {
+          console.log(
+            new Date(posts[keyB].date),
+            new Date(posts[keyA].date),
+            new Date(posts[keyB].date) - new Date(posts[keyA].date)
+          );
+          return new Date(posts[keyB].date) - new Date(posts[keyA].date);
+        })
+      );
     } catch ({ response }) {
       setIsLoading(false);
       dispatch(
@@ -86,7 +100,19 @@ function Profile() {
     }
   }
 
-  function handleInputChange(event) {}
+  async function handlePostSubmit(event, data) {
+    event.preventDefault();
+    console.log(data);
+    try {
+      const {
+        data: { posts },
+      } = await createUserPost(token, data);
+      console.log(posts);
+      setPosts();
+    } catch (error) {
+      console.error(error);
+    }
+  }
 
   function isCurrentUserPage() {
     return token === profileId;
@@ -199,7 +225,7 @@ function Profile() {
                       prefix="friends"
                       user={friend}
                       key={friend._id}
-                      userType={UserTypes.profilePage}
+                      userType={USER_TYPES.profilePage}
                     />
                   </Link>
                 ))}
@@ -236,24 +262,18 @@ function Profile() {
               <EditableForm
                 type="post"
                 classPrefix="editor"
-                onInput={(event) => handleInputChange(event)}
+                submitHandler={handlePostSubmit}
                 withAttachment
+                id={profileId}
               />
             </div>
           </div>
 
           <div className="posts__list">
-            {postsList ? (
-              postsList.map((post) => (
-                <Post
-                  author={post.author}
-                  text={post.text}
-                  comments={post.comments}
-                  attachments={post.attachments}
-                  date={post.date}
-                  key={post.id}
-                />
-              ))
+            {posts ? (
+              Object.keys(posts)
+                .sort((keyA, keyB) => new Date(posts[keyB].date) - new Date(posts[keyA].date))
+                .map((key) => <Post postData={posts[key]} key={key} />)
             ) : (
               <span>No posts here</span>
             )}

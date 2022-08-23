@@ -58,7 +58,6 @@ export default function Prompt({
   };
 
   const handleConfirm = (e, newData = sdata) => {
-    console.log(data, sdata, newData);
     e.stopPropagation();
     handleClose();
     if (onConfirm) onConfirm(newData);

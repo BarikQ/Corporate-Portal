@@ -2,6 +2,23 @@ import moment from 'moment';
 import mongoose from 'mongoose';
 import { v4 } from 'uuid';
 
+const attachmentSchema = new mongoose.Schema({
+  type: Object,
+  
+  type: {
+    type: String,
+    required: true,
+  },
+  url: {
+    type: String,
+    required: true,
+  },
+  name: {
+    type: String,
+    required: true,
+  },
+})
+
 const messageSchema = new mongoose.Schema({
   type: Object,
   default: {},
@@ -20,7 +37,7 @@ const messageSchema = new mongoose.Schema({
     },
     attachments: {
       type: Array,
-      default: [],
+      of: attachmentSchema,
     },
   },
   date: {
@@ -54,6 +71,75 @@ const chatSchema = new mongoose.Schema({
     type: Array,
     default: [],
     of: messageSchema,
+  },
+});
+
+const commentSchema = new mongoose.Schema({
+  type: Object,
+  
+  userId: {
+    type: String,
+    required: true,
+  },
+  content: {
+    type: Object,
+    default: {},
+    required: true,
+
+    text: {
+      type: String,
+    },
+    attachments: {
+      type: Array,
+      of: attachmentSchema,
+    },
+  },
+  likes: {
+    type: Number,
+    default: 0,
+  },
+  date: {
+    type: String,
+    default: () => new Date(),
+  }
+})
+
+const postSchema = new mongoose.Schema({
+  type: Object,
+
+  _id: {
+    type: String,
+    required: true,
+  },
+  publisherId: {
+    type: String,
+    required: true,
+  },
+  content: {
+    type: Object,
+    default: {},
+    required: true,
+
+    text: {
+      type: String,
+    },
+    attachments: {
+      type: Array,
+      of: attachmentSchema,
+    },
+  },
+  comments: {
+    type: Map,
+    default: new Map(),
+    of: commentSchema,
+  },
+  likes: {
+    type: Array,
+    default: [],
+  },
+  date: {
+    type: String,
+    default: () => new Date(),
   },
 });
 
@@ -117,6 +203,11 @@ const schema = new mongoose.Schema({
       default: '',
       required: true,
     },
+  },
+  posts: {
+    type: Map,
+    default: new Map(),
+    of: postSchema,
   },
   chats: {
     type: Map,

@@ -16,6 +16,8 @@ import {
   getChatMessages,
   postUserFriend,
   deleteUserFriend,
+  postUserPost,
+  putUserPost,
 } from './user';
 
 export const router = express.Router();
@@ -28,10 +30,15 @@ router.put('/:id', [limiter(15, 60 * 1000), authenticate, dataDecoder()], putUse
 router.delete('/:id', [limiter(15, 60 * 1000), authenticate], deleteUser);
 
 router.get('/:id/roles', [limiter(15, 60 * 1000), authenticate], getUserRoles);
+
 router.get('/:id/chats', [limiter(15, 60 * 1000), authenticate], getUserChats);
+router.get('/:id/chats/:chatId', [limiter(15, 60 * 1000), authenticate], getChatMessages);
+
 router.post('/:id/friends', [limiter(15, 60 * 1000), authenticate], postUserFriend);
 router.delete('/:id/friends', [limiter(15, 60 * 1000), authenticate], deleteUserFriend);
 
-router.get('/:id/chats/:chatId', [limiter(15, 60 * 1000), authenticate], getChatMessages);
+router.post('/:id/posts', [limiter(15, 60 * 1000), authenticate], postUserPost);
+router.put('/:id/posts/:postId', [limiter(15, 60 * 1000), authenticate], putUserPost);
+
 
 export { router as users };

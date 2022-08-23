@@ -1,7 +1,9 @@
 import cloudinary from 'cloudinary';
+import mongoose from 'mongoose';
 
-import { getAccessToken, saltData, sessionOptions } from '../../../utils';
+import { fileUploader, getAccessToken, saltData, sessionOptions } from '../../../utils';
 import { User } from '../../../controllers';
+import { mainRoute } from '../../../constants';
 
 const cloudinaryRoute = 'iTechArt/Portal/Users';
 
@@ -180,5 +182,70 @@ export const deleteUserFriend = async (req, res) => {
   } catch (error) {
     console.log(error.message);
     res.status(400).json({ message: 'Failed to remove friend' });
+  }
+};
+
+export const postUserPost = async (req, res) => {
+  try {
+    const _id = Buffer.from(req.params.id, 'base64').toString();
+    const { text, attachments } = req.body;
+    const newPostId = mongoose.Types.ObjectId();
+
+    const data = {
+      text,
+      attachments: await Promise.all(
+        await attachments.map(async ({ value, name, type }, index) => {
+          const { resource_type, url } = await fileUploader(value, {
+            folder: `${mainRoute}/Users/${_id}/posts/${newPostId}`,
+            use_filename: true,
+            unique_filename: false,
+          });
+
+          return { type: type || resource_type, url, name };
+        })
+      ),
+    };
+
+    console.log(data);
+    const user = await new User();
+    const { posts } = await user.postUserPost(_id, data, newPostId);
+    res.status(200).json({ posts });
+  } catch (error) {
+    console.log(error.message);
+    res.status(400).json({ message: 'Failed to create post' });
+  }
+};
+
+export const putUserPost = async (req, res) => {
+  try {
+    const pageId = req.params.id;
+    const postId = req.params.postId;
+    const pageIdDecoded = Buffer.from(req.params.id, 'base64').toString();
+    const { updates, userId } = req.body;
+    const _id = Buffer.from(req.params.id, 'base64').toString();
+
+    const user = await new User();
+    const { posts } = await user.getUser({ _id });
+    if (updates.content && posts[postId].publisherId !== userId) return res.status(400).json({ message: "You don't have access to edit this post" });
+
+    updates.content.attachments = await Promise.all(
+      await updates.content.attachments.map(async ({ value, name, type, url }, index) => {
+        if (url) return { type, url, name };
+        const uploadedData = await fileUploader(value, {
+          folder: `${mainRoute}/Users/${_id}/posts/${postId}`,
+          use_filename: true,
+          unique_filename: false,
+        });
+
+        return { type: type || uploadedData.resource_type, url: uploadedData.url, name };
+      })
+    );
+
+    const updatedUser = await user.putUserPost(userId, postId, updates);
+
+    res.status(200).json({ post: updatedUser.posts.get(postId) });
+  } catch (error) {
+    console.log(error.message);
+    res.status(400).json({ message: error.message || 'Failed to update post' });
   }
 };

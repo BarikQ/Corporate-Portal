@@ -8,6 +8,8 @@ import {
   getChatMessages,
   addUserFriend,
   deleteUserFriend,
+  createUserPost,
+  updateUserPost,
 } from './user';
 
 export {
@@ -23,4 +25,6 @@ export {
   getChatMessages,
   addUserFriend,
   deleteUserFriend,
+  createUserPost,
+  updateUserPost,
 };

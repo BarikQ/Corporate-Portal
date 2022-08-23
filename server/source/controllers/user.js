@@ -62,4 +62,12 @@ export class User {
   async deleteUserFriend(userId, friendId) {
     return await this.models.user.deleteUserFriend(userId, friendId);
   }
+
+  async postUserPost(userId, data, newPostId) {
+    return await this.models.user.postUserPost(userId, data, newPostId);
+  }
+
+  async putUserPost(userId, postId, updates) {
+    return await this.models.user.putUserPost(userId, postId, updates);
+  }
 }

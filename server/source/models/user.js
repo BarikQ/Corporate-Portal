@@ -3,8 +3,8 @@ import bcrypt from 'bcrypt';
 
 import { user } from '../odm';
 import { objectCropper, fileUploader } from '../utils';
+import { mainRoute } from '../constants';
 
-const mainRoute = 'iTechArt/Portal';
 const cloudFolder = 'Users';
 
 function addMessageCb(error, user, targetUser, message) {
@@ -39,9 +39,10 @@ export class User {
   }
 
   async getUser(userId) {
-    const { _id, profileData, friends } = await user.findOne(userId, {
+    const { _id, profileData, friends, posts } = await user.findOne(userId, {
       profileData: 1,
       friends: 1,
+      posts: 1,
     });
     const decodedFriends = friends.map((friend) => Buffer.from(friend, 'base64').toString());
     const friendsDocs = await user.find({ _id: decodedFriends }, { profileData: 1 }).limit(6);
@@ -52,7 +53,38 @@ export class User {
       };
     });
 
-    return { _id, profileData, friends: sortedFriends };
+    const postsObject = Object.fromEntries(posts);
+
+    const modifiedPosts = {};
+
+    for await (const key of Object.keys(postsObject)) {
+      const { publisherId, comments, likes, content, date, _id } = postsObject[key];
+      const {
+        profileData: { firstName, surname, profileImage },
+      } = await user.findOne(
+        { _id: Buffer.from(publisherId, 'base64').toString() },
+        { 'profileData.firstName': 1, 'profileData.surname': 1, 'profileData.profileImage': 1 }
+      );
+
+      modifiedPosts[_id] = {
+        publisherId,
+        comments,
+        likes,
+        content,
+        date,
+        id: _id,
+        author: {
+          profileData: {
+            id: postsObject[key].publisherId,
+            firstName,
+            surname,
+            profileImage,
+          },
+        },
+      };
+    }
+
+    return { _id, profileData, friends: sortedFriends, posts: modifiedPosts };
   }
 
   async updateUser(userId, userData) {
@@ -220,14 +252,14 @@ export class User {
         content: {
           text: content.text,
           attachments: await Promise.all(
-            await content.attachments.map(async ({ value, name }, index) => {
+            await content.attachments.map(async ({ value, name, type }, index) => {
               const { resource_type, url } = await fileUploader(value, {
                 folder: `${mainRoute}/Files/${senderDecodedId}/${receiverDecodedId}`,
                 use_filename: true,
                 unique_filename: false,
               });
 
-              return { type: resource_type, url, name };
+              return { type: type || resource_type, url, name };
             })
           ),
         },
@@ -280,5 +312,36 @@ export class User {
 
     const currentUser = await user.updateOne({ _id: userIdDecoded }, { $pull: { friends: friendId } });
     const friend = await user.updateOne({ _id: friendIdDecoded }, { $pull: { friends: userId } });
+  }
+
+  async postUserPost(userId, { text, attachments }, newPostId) {
+    return await user.findOneAndUpdate(
+      { _id: userId },
+      {
+        $set: {
+          [`posts.${newPostId}`]: {
+            _id: newPostId,
+            publisherId: Buffer.from(userId.toString()).toString('base64'),
+            content: {
+              text: text,
+              attachments: attachments,
+            },
+          },
+        },
+      },
+      {
+        useFindAndModify: false,
+        new: true,
+      }
+    );
+  }
+
+  async putUserPost(userId, postId, updates) {
+    const currentUser = await user.findOne({ _id: Buffer.from(userId, 'base64').toString() }, { posts: 1 });
+    const { posts } = currentUser;
+
+    currentUser.posts.set(postId, { ...posts.get(postId).toObject(), ...updates });
+
+    return await currentUser.save();
   }
 }

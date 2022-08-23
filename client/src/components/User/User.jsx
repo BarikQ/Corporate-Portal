@@ -3,9 +3,10 @@ import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 
 import { calculateAge } from 'utils';
-import { UserTypes } from './../../constants/enum.ts';
+import { USER_TYPES } from 'constants';
 
 import './User.scss';
+import moment from 'moment';
 
 User.propTypes = {
   className: PropTypes.string,
@@ -41,8 +42,16 @@ function User({
 }) {
   const switchUserType = () => {
     switch (userType) {
-      case UserTypes.profilePage:
+      case USER_TYPES.profilePage:
         return null;
+      case USER_TYPES.postAuthor:
+        return (
+          <div className={`user__info--bottom ${prefix ? `${prefix}-user__info--bottom` : ''}`}>
+            <span className={`user__birth-date ${prefix ? `${prefix}-user__birth-date` : ''}`}>
+              {moment(date, 'LLLL').format('LLLL')}
+            </span>
+          </div>
+        );
       default:
         return (
           <div className={`user__info--bottom ${prefix ? `${prefix}-user__info--bottom` : ''}`}>

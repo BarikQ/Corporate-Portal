@@ -124,6 +124,22 @@
     -webkit-text-stroke: 1px white;
     color: transparent;
   }
+
+  .editable-form {
+    &--post {
+      grid-template: 1fr / auto 1fr auto;
+      align-items: center;
+    }
+
+    &__text {
+      grid-area: 1/2/2/3;
+    }
+
+    &__attachment-label {
+      grid-area: 1/1/2/2;
+      align-self: center;
+    }
+  }
 }
 
 .posts {
