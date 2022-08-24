@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+/* eslint-disable no-debugger */
+import React, { useEffect, useState, useReducer } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 
@@ -11,106 +12,66 @@ import { useToken } from 'hooks';
 
 import './Profile.scss';
 
-import { ReactComponent as AttachmentIcon } from 'assets/images/attachment.svg';
-
-// const postsList2 = [
-//   {
-//     author: {
-//       name: 'Kek Yaroslavov',
-//       image: baseFriendImage,
-//     },
-//     text: 'Rofl post text',
-//     date: '01.01.2022',
-//     id: 1,
-//   },
-//   {
-//     author: {
-//       name: 'Kek Yaroslavov',
-//       image: baseFriendImage,
-//     },
-//     text: 'Rofl post image',
-//     attachments: {
-//       images: [baseFriendImage],
-//       videos: [],
-//     },
-//     date: '01.03.2022',
-//     id: 2,
-//   },
-//   {
-//     author: {
-//       name: 'Kek Yaroslavov',
-//       image: baseFriendImage,
-//     },
-//     text: 'Rofl post text',
-//     id: 3,
-//   },
-//   {
-//     author: {
-//       name: 'Kek Yaroslavov',
-//       image: baseFriendImage,
-//     },
-//     text: 'Rofl post text',
-//     date: '12.15.2021',
-//     id: 4,
-//   },
-// ];
-const postsList = null;
+const initialState = {
+  profileData: null,
+  posts: null,
+  friends: null,
+};
 
 function Profile() {
   const { profileId } = useParams();
   const { token } = useToken();
-  const [userData, setUserData] = useState(null);
-  const [posts, setPosts] = useState(null);
-  // console.log(userData);
-  const [friends, setFriends] = useState(null);
+  const [{ profileData, posts, friends }, setUserData] = useReducer(
+    (currentValues, newValues) => ({ ...currentValues, ...newValues }),
+    initialState
+  );
+  const [friendsRequest, setFriendsRequest] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const dispatch = useDispatch();
-  const [friendsRequest, setFriendsRequest] = useState(null);
 
   useEffect(() => {
-    getProfileData(profileId);
-  }, [profileId]);
+    const fetchData = async () => {
+      try {
+        const { profileData, friends, posts } = await getUserData(profileId);
+        setUserData({ profileData, friends, posts });
+        setIsLoading(false);
+      } catch (error) {
+        const { response } = error;
+        setIsLoading(false);
+        dispatch(
+          setAlert({
+            message: response ? `${response.status}: ${response.data.message}` : error.message,
+            type: 'error',
+          })
+        );
+      }
+    };
 
-  async function getProfileData(id) {
-    try {
-      const { profileData, friends, posts } = await getUserData(profileId);
-      setUserData(profileData);
-      setFriends(friends);
-      console.log(posts);
-      setPosts(posts);
-      setIsLoading(false);
-      console.log(
-        Object.keys(posts).sort((keyA, keyB) => {
-          console.log(
-            new Date(posts[keyB].date),
-            new Date(posts[keyA].date),
-            new Date(posts[keyB].date) - new Date(posts[keyA].date)
-          );
-          return new Date(posts[keyB].date) - new Date(posts[keyA].date);
-        })
-      );
-    } catch ({ response }) {
-      setIsLoading(false);
-      dispatch(
-        setAlert({
-          message: `${response.status}: ${response.data.message}`,
-          type: 'error',
-        })
-      );
-    }
-  }
+    fetchData();
+
+    return () => {
+      setIsLoading(true);
+      setUserData(initialState);
+    };
+  }, [profileId]);
 
   async function handlePostSubmit(event, data) {
     event.preventDefault();
-    console.log(data);
+
     try {
       const {
-        data: { posts },
-      } = await createUserPost(token, data);
-      console.log(posts);
-      setPosts();
+        data: { post },
+      } = await createUserPost(token, profileId, data);
+      setUserData({ posts: { ...posts, ...post } });
     } catch (error) {
+      const { response } = error;
       console.error(error);
+      dispatch(
+        setAlert({
+          message: response ? `${response.status}: ${response.data.message}` : error.message,
+          type: 'error',
+        })
+      );
     }
   }
 
@@ -128,7 +89,7 @@ function Profile() {
         })
       );
       setFriendsRequest('Friend request sended');
-      setFriends([...friends, currentUser]);
+      setUserData({ friends: [...friends, currentUser] });
     } catch ({ response }) {
       dispatch(
         setAlert({
@@ -149,7 +110,7 @@ function Profile() {
         })
       );
       setFriendsRequest('User removed from friends list');
-      setFriends(friends.filter(({ _id }) => _id !== token));
+      setUserData({ friends: friends.filter(({ _id }) => _id !== token) });
     } catch ({ response }) {
       dispatch(
         setAlert({
@@ -199,12 +160,25 @@ function Profile() {
     }
   }
 
-  return userData ? (
+  function handlePostUpdate({ comments, content, likes, id }) {
+    if (comments || content || likes)
+      return setUserData({
+        posts: { ...posts, ...{ [id]: { ...posts[id], comments, content, likes } } },
+      });
+
+    setUserData({
+      posts: Object.keys(posts).reduce((current, key) => {
+        return key !== id ? { ...current, [key]: posts[key] } : current;
+      }, {}),
+    });
+  }
+
+  return profileData ? (
     <div className="profile">
       <div className="profile__column profile__column--narrow">
         <div className="profile__photo page__block">
           <div className="profile__photo-wrapper border--bottom--grey">
-            <img className="profile__photo-image" src={userData?.profileImage} />
+            <img className="profile__photo-image" src={profileData?.profileImage} />
           </div>
 
           <div className="profile__actions">{sortUserAvailableActions()}</div>
@@ -240,17 +214,17 @@ function Profile() {
       <div className="profile__column profile__column--wide">
         <div className="profile__info page__block">
           <div className="profile__info-up border--bottom--grey">
-            <h1 className="profile__info-name">{`${userData.firstName} ${userData.surname}`}</h1>
-            <span className="profile__info-status">{userData.status}</span>
+            <h1 className="profile__info-name">{`${profileData.firstName} ${profileData.surname}`}</h1>
+            <span className="profile__info-status">{profileData.status}</span>
           </div>
           <div className="profile__info-down info border--bottom--grey">
-            {userData.city ? <LabeledItem label="City" value={userData.city} /> : null}
+            {profileData.city ? <LabeledItem label="City" value={profileData.city} /> : null}
             <LabeledItem
               label="Birth Date"
-              value={`${userData.birthDate}, ${calculateAge(userData.birthDate)} y.o.`}
+              value={`${profileData.birthDate}, ${calculateAge(profileData.birthDate)} y.o.`}
             />
-            {userData.technologies.length ? (
-              <LabeledItem label="Stack" value={userData.technologies.join(', ')} />
+            {profileData.technologies.length ? (
+              <LabeledItem label="Stack" value={profileData.technologies.join(', ')} />
             ) : null}
           </div>
           {/* <div className="profile__stats"></div> */}
@@ -273,7 +247,9 @@ function Profile() {
             {posts ? (
               Object.keys(posts)
                 .sort((keyA, keyB) => new Date(posts[keyB].date) - new Date(posts[keyA].date))
-                .map((key) => <Post postData={posts[key]} key={key} />)
+                .map((key) => (
+                  <Post postData={posts[key]} key={key} onPostUpdade={handlePostUpdate} />
+                ))
             ) : (
               <span>No posts here</span>
             )}

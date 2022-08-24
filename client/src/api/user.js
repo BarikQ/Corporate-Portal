@@ -129,13 +129,16 @@ const deleteUserFriend = async (userId, friendId) => {
   return await axios(axiosConfig);
 };
 
-const createUserPost = async (userId = localStorage.getItem('x-token'), data) => {
+const createUserPost = async (author = localStorage.getItem('x-token'), pageId, data) => {
   const axiosConfig = {
     method: 'post',
     baseURL: API_URL,
-    url: `/users/${userId}/posts`,
+    url: `/users/${pageId}/posts`,
     withCredentials: true,
-    data,
+    data: {
+      ...data,
+      publisherId: author,
+    },
   };
 
   return await axios(axiosConfig);
@@ -156,6 +159,20 @@ const updateUserPost = async (pageId, userId, postId, updates) => {
   return await axios(axiosConfig);
 };
 
+const deleteUserPost = async (pageId, userId, postId) => {
+  const axiosConfig = {
+    method: 'delete',
+    baseURL: API_URL,
+    url: `/users/${pageId}/posts/${postId}`,
+    withCredentials: true,
+    data: {
+      userId,
+    },
+  };
+
+  return await axios(axiosConfig);
+};
+
 export {
   updateUserData,
   getUserData,
@@ -167,4 +184,5 @@ export {
   deleteUserFriend,
   createUserPost,
   updateUserPost,
+  deleteUserPost,
 };

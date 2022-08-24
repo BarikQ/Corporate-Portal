@@ -18,6 +18,7 @@ import {
   deleteUserFriend,
   postUserPost,
   putUserPost,
+  deleteUserPost,
 } from './user';
 
 export const router = express.Router();
@@ -39,6 +40,7 @@ router.delete('/:id/friends', [limiter(15, 60 * 1000), authenticate], deleteUser
 
 router.post('/:id/posts', [limiter(15, 60 * 1000), authenticate], postUserPost);
 router.put('/:id/posts/:postId', [limiter(15, 60 * 1000), authenticate], putUserPost);
+router.delete('/:id/posts/:postId', [limiter(15, 60 * 1000), authenticate], deleteUserPost);
 
 
 export { router as users };

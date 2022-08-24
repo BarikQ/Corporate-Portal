@@ -4,19 +4,19 @@ import { useParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import FavoriteTwoToneIcon from '@mui/icons-material/FavoriteTwoTone';
+
 import { useToken } from 'hooks';
-import { updateUserPost } from 'api';
+import { deleteUserPost, updateUserPost } from 'api';
 import { EditableForm, Prompt, User } from 'components';
 import { USER_TYPES } from 'constants';
+import { setAlert } from 'store/actions';
+
+import { ReactComponent as CommentIcon } from 'assets/images/commentIcon.svg';
 
 import './Post.scss';
-
-import EditIcon from '@mui/icons-material/Edit';
-import FavoriteTwoToneIcon from '@mui/icons-material/FavoriteTwoTone';
-import baseFriendImage from 'assets/images/baseFriendImage.png';
-import baseProfileImage from 'assets/images/baseProfileImage.png';
-import { ReactComponent as CommentIcon } from 'assets/images/commentIcon.svg';
-import { setAlert } from 'store/actions';
 
 Post.propTypes = {
   className: PropTypes.string,
@@ -42,7 +42,24 @@ function EditHandler({ onClick }) {
   );
 }
 
-export default function Post({ postData, className, ...props }) {
+function DeleteHandler({ onClick }) {
+  return (
+    <button onClick={onClick} className="post__delete">
+      <DeleteIcon />
+    </button>
+  );
+}
+
+function DeletePromptContent() {
+  return (
+    <span className="post__delete-prompt">
+      Are you sure you want to delete this post?
+      <br /> <span className="post__delete-text">This action is irreversible.</span>
+    </span>
+  );
+}
+
+export default function Post({ postData, onPostUpdade, className, ...props }) {
   const { profileId } = useParams();
   const { token } = useToken();
 
@@ -57,7 +74,7 @@ export default function Post({ postData, className, ...props }) {
     },
     setPostData,
   ] = useReducer((currentValues, newValues) => ({ ...currentValues, ...newValues }), postData);
-  console.log(postData);
+
   const [isLiked, setIsLiked] = useState(() => likes.includes(token));
   const dispatch = useDispatch();
   const { profileData } = author;
@@ -94,6 +111,7 @@ export default function Post({ postData, className, ...props }) {
 
       setIsLiked(() => post.likes.includes(token));
       setPostData({ likes: post.likes });
+      onPostUpdade();
     } catch (error) {
       setIsLiked(state.isLiked);
       setPostData({ likes: state.likes });
@@ -101,7 +119,7 @@ export default function Post({ postData, className, ...props }) {
     }
   };
 
-  const handlePostUpdate = async (event, data) => {
+  const handlePostUpdateSubmit = async (event, data) => {
     event.preventDefault();
 
     try {
@@ -117,9 +135,9 @@ export default function Post({ postData, className, ...props }) {
     }
   };
 
-  const handlePost = async ({
+  const handlePostUpdate = async ({
     data: {
-      post: { comments, content, likes },
+      post: { comments, content, likes, _id },
     },
   }) => {
     dispatch(
@@ -129,6 +147,27 @@ export default function Post({ postData, className, ...props }) {
       })
     );
     setPostData({ comments, content, likes });
+    onPostUpdade({ comments, content, likes, id: _id });
+  };
+
+  const handlePostDelete = async ({ id }, closeModal) => {
+    try {
+      console.log(postData);
+      await deleteUserPost(profileId, token, id);
+      closeModal();
+      console.log('delete');
+      onPostUpdade({ id });
+    } catch (error) {
+      const { response } = error;
+      closeModal();
+      dispatch(
+        setAlert({
+          message: response ? `${response.status}: ${response.data.message}` : error.message,
+          type: 'error',
+        })
+      );
+    }
+    // onPostUpdade(id);
   };
 
   return (
@@ -140,17 +179,27 @@ export default function Post({ postData, className, ...props }) {
             dialogTitle={`Edit post`}
             Handler={EditHandler}
             DialogPromptComponent={EditableForm}
-            onConfirm={handlePost}
+            onConfirm={handlePostUpdate}
             cancelText={'Cancel'}
             isConfirmButton={false}
             DialogPromptComponentParams={{
               type: 'post-edit',
               classPrefix: 'editor',
-              submitHandler: handlePostUpdate,
+              submitHandler: handlePostUpdateSubmit,
               withAttachment: true,
               initialState: { text, attachments },
               id,
             }}
+          />
+          <Prompt
+            data={postData}
+            dialogTitle={`Delete post`}
+            Handler={DeleteHandler}
+            DialogPromptText={DeletePromptContent}
+            onConfirm={handlePostDelete}
+            returnCloseHandler
+            cancelText={'No'}
+            confirmText={'Yes'}
           />
         </div>
       )}

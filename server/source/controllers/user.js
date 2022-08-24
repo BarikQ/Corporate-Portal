@@ -67,7 +67,11 @@ export class User {
     return await this.models.user.postUserPost(userId, data, newPostId);
   }
 
-  async putUserPost(userId, postId, updates) {
-    return await this.models.user.putUserPost(userId, postId, updates);
+  async putUserPost(pageId, userId, postId, updates) {
+    return await this.models.user.putUserPost(pageId, userId, postId, updates);
+  }
+
+  async deleteUserPost(pageId, userId, postId) {
+    return await this.models.user.deleteUserPost(pageId, userId, postId);
   }
 }

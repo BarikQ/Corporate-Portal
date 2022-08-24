@@ -10,6 +10,7 @@ import {
   deleteUserFriend,
   createUserPost,
   updateUserPost,
+  deleteUserPost,
 } from './user';
 
 export {
@@ -27,4 +28,5 @@ export {
   deleteUserFriend,
   createUserPost,
   updateUserPost,
+  deleteUserPost,
 };

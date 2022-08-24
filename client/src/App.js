@@ -143,7 +143,7 @@ function App() {
                 <Route path="im" element={<Messenger />} />
               </Route>
               <Route element={<ProtectedRoute />}>
-                <Route path="/:profileId" element={<Profile />} />
+                <Route path="/:profileId" key=":profileId" element={<Profile />} />
               </Route>
               <Route element={<ProtectedRoute />}>
                 <Route path="friends" element={<Friends />} />

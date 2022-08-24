@@ -314,14 +314,14 @@ export class User {
     const friend = await user.updateOne({ _id: friendIdDecoded }, { $pull: { friends: userId } });
   }
 
-  async postUserPost(userId, { text, attachments }, newPostId) {
-    return await user.findOneAndUpdate(
+  async postUserPost(userId, { text, attachments, publisherId }, newPostId) {
+    const { posts } = await user.findOneAndUpdate(
       { _id: userId },
       {
         $set: {
           [`posts.${newPostId}`]: {
             _id: newPostId,
-            publisherId: Buffer.from(userId.toString()).toString('base64'),
+            publisherId: publisherId,
             content: {
               text: text,
               attachments: attachments,
@@ -334,14 +334,55 @@ export class User {
         new: true,
       }
     );
+
+    const {
+      profileData: { firstName, surname, profileImage },
+    } = await user.findOne(
+      { _id: Buffer.from(publisherId, 'base64').toString() },
+      { 'profileData.firstName': 1, 'profileData.surname': 1, 'profileData.profileImage': 1 }
+    );
+
+    const postsObject = Object.fromEntries(posts);
+    const { comments, likes, content, date, _id } = postsObject[newPostId];
+
+    return {
+      [newPostId]: {
+        publisherId,
+        comments,
+        likes,
+        content,
+        date,
+        id: _id,
+        author: {
+          profileData: {
+            id: publisherId,
+            firstName,
+            surname,
+            profileImage,
+          },
+        },
+      },
+    };
   }
 
-  async putUserPost(userId, postId, updates) {
-    const currentUser = await user.findOne({ _id: Buffer.from(userId, 'base64').toString() }, { posts: 1 });
-    const { posts } = currentUser;
+  async putUserPost(pageId, userId, postId, updates) {
+    const pageIdUser = await user.findOne({ _id: pageId }, { posts: 1 });
+    const { posts } = pageIdUser;
 
-    currentUser.posts.set(postId, { ...posts.get(postId).toObject(), ...updates });
+    pageIdUser.posts.set(postId, { ...posts.get(postId).toObject(), ...updates });
 
-    return await currentUser.save();
+    return await pageIdUser.save();
+  }
+
+  async deleteUserPost(pageId, userId, postId) {
+    const pageIdUser = await user.findOne({ _id: pageId }, { posts: 1 });
+    const { publisherId } = pageIdUser.posts.get(postId);
+
+    if (Buffer.from(publisherId, 'base64').toString() !== userId && userId !== pageId) {
+      throw new Error("You don't have rights to delete this post");
+    }
+
+    pageIdUser.posts.delete(postId);
+    return await pageIdUser.save();
   }
 }

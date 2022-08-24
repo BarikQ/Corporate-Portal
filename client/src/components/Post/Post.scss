@@ -1,5 +1,6 @@
 @use 'assets/styles/_colors.scss' as colors;
 
+
 .post {
   display: flex;
   flex-direction: column;
@@ -37,6 +38,10 @@
     margin-bottom: 12px;
   }
 
+  &__delete-text {
+    color: colors.$error-red;
+  }
+
   &__actions {
     display: flex;
     gap: 8px;
@@ -52,6 +57,51 @@
     position: absolute;
     top: 16px;
     right: 16px;
+    display: flex;
+    gap: 6px;
+  }
+
+  &__delete {
+    // display: flex;
+    // padding: 2px;
+    // margin: 2px;
+    // transition: 0.2s ease all;
+  
+    // & svg {
+    //   transition: 0.2s ease all;
+    // }
+  
+    // &:hover {
+    //   box-shadow: 0 0 1px 1px colors.$error-red;
+  
+    //   & svg {
+    //     background-color: colors.$error-red;
+    //     color: white;
+    //     transition: 0.2s ease all;
+    //   }
+    // }
+    display: flex;
+    padding: 2px;
+    margin: 2px;
+    transition: 0.2s ease all;
+    background: none;
+    box-shadow: 0 0 1px 2px white;
+
+    & svg {
+      transition: 0.2s ease all;
+      color: white;
+      background-color: transparent;
+    }
+
+    &:hover {
+      box-shadow: 0 0 1px 2px colors.$error-red;
+
+      & svg {
+        background-color: colors.$error-red;
+        color: white;
+        transition: 0.2s ease all;
+      }
+    }
   }
 
   &__edit {

@@ -153,7 +153,7 @@ function EditableForm({
       };
 
       const response = await submitHandler(event, sendedData);
-      onSuccess(event, response);
+      if (onSuccess) onSuccess(event, response);
 
       if (inputRef.current) {
         inputRef.current.value = null;

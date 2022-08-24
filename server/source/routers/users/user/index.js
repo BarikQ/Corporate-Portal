@@ -188,11 +188,12 @@ export const deleteUserFriend = async (req, res) => {
 export const postUserPost = async (req, res) => {
   try {
     const _id = Buffer.from(req.params.id, 'base64').toString();
-    const { text, attachments } = req.body;
+    const { text, attachments, publisherId } = req.body;
     const newPostId = mongoose.Types.ObjectId();
 
     const data = {
       text,
+      publisherId,
       attachments: await Promise.all(
         await attachments.map(async ({ value, name, type }, index) => {
           const { resource_type, url } = await fileUploader(value, {
@@ -206,10 +207,9 @@ export const postUserPost = async (req, res) => {
       ),
     };
 
-    console.log(data);
     const user = await new User();
-    const { posts } = await user.postUserPost(_id, data, newPostId);
-    res.status(200).json({ posts });
+    const post = await user.postUserPost(_id, data, newPostId);
+    res.status(200).json({ post });
   } catch (error) {
     console.log(error.message);
     res.status(400).json({ message: 'Failed to create post' });
@@ -222,17 +222,16 @@ export const putUserPost = async (req, res) => {
     const postId = req.params.postId;
     const pageIdDecoded = Buffer.from(req.params.id, 'base64').toString();
     const { updates, userId } = req.body;
-    const _id = Buffer.from(req.params.id, 'base64').toString();
 
     const user = await new User();
-    const { posts } = await user.getUser({ _id });
+    const { posts } = await user.getUser({ _id: pageIdDecoded });
     if (updates.content && posts[postId].publisherId !== userId) return res.status(400).json({ message: "You don't have access to edit this post" });
 
     updates.content.attachments = await Promise.all(
       await updates.content.attachments.map(async ({ value, name, type, url }, index) => {
         if (url) return { type, url, name };
         const uploadedData = await fileUploader(value, {
-          folder: `${mainRoute}/Users/${_id}/posts/${postId}`,
+          folder: `${mainRoute}/Users/${pageIdDecoded}/posts/${postId}`,
           use_filename: true,
           unique_filename: false,
         });
@@ -241,11 +240,29 @@ export const putUserPost = async (req, res) => {
       })
     );
 
-    const updatedUser = await user.putUserPost(userId, postId, updates);
+    const updatedUser = await user.putUserPost(pageIdDecoded, userId, postId, updates);
 
     res.status(200).json({ post: updatedUser.posts.get(postId) });
   } catch (error) {
     console.log(error.message);
     res.status(400).json({ message: error.message || 'Failed to update post' });
+  }
+};
+
+export const deleteUserPost = async (req, res) => {
+  try {
+    const { id, postId } = req.params;
+    const { userId } = req.body;
+    console.log(id, postId, userId);
+    const userIdDecoded = Buffer.from(userId, 'base64').toString();
+    const pageIdDecoded = Buffer.from(id, 'base64').toString();
+
+    const user = await new User();
+    await user.deleteUserPost(pageIdDecoded, userIdDecoded, postId);
+
+    res.sendStatus(204);
+  } catch (error) {
+    console.log(error.message);
+    res.status(400).json({ message: 'Failed to delete post' });
   }
 };
