@@ -11,6 +11,10 @@ export class User {
     return await this.models.user.create();
   }
 
+  async allowAccess(accessToken) {
+    return await this.models.user.allowAccess(accessToken);
+  }
+
   async getUser(userId) {
     return await this.models.user.getUser(userId);
   }
@@ -63,8 +67,8 @@ export class User {
     return await this.models.user.deleteUserFriend(userId, friendId);
   }
 
-  async postUserPost(userId, data, newPostId) {
-    return await this.models.user.postUserPost(userId, data, newPostId);
+  async postUserPost(pageId, authorId, postId, data) {
+    return await this.models.user.postUserPost(pageId, authorId, postId, data);
   }
 
   async putUserPost(pageId, userId, postId, updates) {
@@ -73,5 +77,17 @@ export class User {
 
   async deleteUserPost(pageId, userId, postId) {
     return await this.models.user.deleteUserPost(pageId, userId, postId);
+  }
+
+  async postPostComment(pageId, authorId, postId, commentId, data) {
+    return await this.models.user.postPostComment(pageId, authorId, postId, commentId, data);
+  }
+
+  async putPostComment(pageId, userId, postId, commentId, updates) {
+    return await this.models.user.putPostComment(pageId, userId, postId, commentId, updates);
+  }
+
+  async deletePostComment(pageId, userId, postId, commentId) {
+    return await this.models.user.deletePostComment(pageId, userId, postId, commentId);
   }
 }

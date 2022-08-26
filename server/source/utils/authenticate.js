@@ -13,7 +13,7 @@ export const authenticate = async (req, res, next) => {
     const _id = req.session.user.token;
     const { accessToken, role } = req.session.user;
     const user = await new User();
-    const data = await user.getUser({ accessToken });
+    const data = await user.allowAccess(accessToken);
 
     req.role = data.role;
 

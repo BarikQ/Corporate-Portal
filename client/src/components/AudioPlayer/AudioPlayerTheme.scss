@@ -1,0 +1,9 @@
+@use 'assets/styles/_colors.scss' as colors;
+
+$rhap_theme-color: colors.$light-blue !default;   // Color of all buttons and volume/progress indicators
+$rhap_background-color: rgba(0, 0, 0, 0.2) !default; // Color of the player background
+$rhap_bar-color: #e4e4e4 !default;     // Color of volume and progress bar
+$rhap_time-color: white !default;       // Font color of current time and duration
+$rhap_font-family: inherit !default;
+
+@import 'react-h5-audio-player/src/styles.scss';

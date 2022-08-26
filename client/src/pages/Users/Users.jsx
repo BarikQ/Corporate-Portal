@@ -161,7 +161,7 @@ function Users({ isFriendsList, className, targetUserId }) {
           {users
             .filter((user) => filterUsers(user))
             .map((user) => (
-              <User prefix="users" user={user} key={user._id} />
+              <User prefix="users" user={user} key={user.id} />
             ))}
         </div>
       ) : isLoading ? (

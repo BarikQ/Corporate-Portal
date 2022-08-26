@@ -19,6 +19,9 @@ import {
   postUserPost,
   putUserPost,
   deleteUserPost,
+  postPostComment,
+  putPostComment,
+  deletePostComment,
 } from './user';
 
 export const router = express.Router();
@@ -42,5 +45,8 @@ router.post('/:id/posts', [limiter(15, 60 * 1000), authenticate], postUserPost);
 router.put('/:id/posts/:postId', [limiter(15, 60 * 1000), authenticate], putUserPost);
 router.delete('/:id/posts/:postId', [limiter(15, 60 * 1000), authenticate], deleteUserPost);
 
+router.post('/:id/posts/:postId/comments', [limiter(15, 60 * 1000), authenticate], postPostComment);
+router.put('/:id/posts/:postId/comments/:commentId', [limiter(15, 60 * 1000), authenticate], putPostComment);
+router.delete('/:id/posts/:postId/comments/:commentId', [limiter(15, 60 * 1000), authenticate], deletePostComment);
 
 export { router as users };

@@ -11,6 +11,9 @@ import {
   createUserPost,
   updateUserPost,
   deleteUserPost,
+  createPostComment,
+  updatePostComment,
+  deletePostComment,
 } from './user';
 
 export {
@@ -29,4 +32,7 @@ export {
   createUserPost,
   updateUserPost,
   deleteUserPost,
+  createPostComment,
+  updatePostComment,
+  deletePostComment,
 };

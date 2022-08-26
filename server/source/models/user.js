@@ -38,6 +38,10 @@ export class User {
     return await user.create(this.data);
   }
 
+  async allowAccess(accessToken) {
+    return await user.findOne({ accessToken });
+  }
+
   async getUser(userId) {
     const { _id, profileData, friends, posts } = await user.findOne(userId, {
       profileData: 1,
@@ -49,42 +53,11 @@ export class User {
     const sortedFriends = friendsDocs.map(({ profileData, _id }) => {
       return {
         profileData: objectCropper(profileData, 'friends'),
-        _id: Buffer.from(_id.toString()).toString('base64'),
+        id: Buffer.from(_id.toString()).toString('base64'),
       };
     });
 
-    const postsObject = Object.fromEntries(posts);
-
-    const modifiedPosts = {};
-
-    for await (const key of Object.keys(postsObject)) {
-      const { publisherId, comments, likes, content, date, _id } = postsObject[key];
-      const {
-        profileData: { firstName, surname, profileImage },
-      } = await user.findOne(
-        { _id: Buffer.from(publisherId, 'base64').toString() },
-        { 'profileData.firstName': 1, 'profileData.surname': 1, 'profileData.profileImage': 1 }
-      );
-
-      modifiedPosts[_id] = {
-        publisherId,
-        comments,
-        likes,
-        content,
-        date,
-        id: _id,
-        author: {
-          profileData: {
-            id: postsObject[key].publisherId,
-            firstName,
-            surname,
-            profileImage,
-          },
-        },
-      };
-    }
-
-    return { _id, profileData, friends: sortedFriends, posts: modifiedPosts };
+    return { id: userId, profileData, friends: sortedFriends, posts };
   }
 
   async updateUser(userId, userData) {
@@ -124,7 +97,7 @@ export class User {
             role: kekUser.role,
           }))
         : data.map((kekUser) => ({
-            _id: Buffer.from(kekUser._id.toString()).toString('base64'),
+            id: Buffer.from(kekUser._id.toString()).toString('base64'),
             profileData: objectCropper(kekUser.profileData, 'friends'),
           }));
     } catch (error) {
@@ -314,14 +287,23 @@ export class User {
     const friend = await user.updateOne({ _id: friendIdDecoded }, { $pull: { friends: userId } });
   }
 
-  async postUserPost(userId, { text, attachments, publisherId }, newPostId) {
+  async postUserPost(pageId, authorId, postId, { text, attachments }) {
+    const {
+      profileData: { firstName, surname, _id, profileImage },
+    } = await user.findOne({ _id: Buffer.from(authorId, 'base64').toString() }, { profileData: 1 });
+
     const { posts } = await user.findOneAndUpdate(
-      { _id: userId },
+      { _id: pageId },
       {
         $set: {
-          [`posts.${newPostId}`]: {
-            _id: newPostId,
-            publisherId: publisherId,
+          [`posts.${postId}`]: {
+            id: postId,
+            author: {
+              id: authorId,
+              firstName,
+              surname,
+              profileImage,
+            },
             content: {
               text: text,
               attachments: attachments,
@@ -335,34 +317,7 @@ export class User {
       }
     );
 
-    const {
-      profileData: { firstName, surname, profileImage },
-    } = await user.findOne(
-      { _id: Buffer.from(publisherId, 'base64').toString() },
-      { 'profileData.firstName': 1, 'profileData.surname': 1, 'profileData.profileImage': 1 }
-    );
-
-    const postsObject = Object.fromEntries(posts);
-    const { comments, likes, content, date, _id } = postsObject[newPostId];
-
-    return {
-      [newPostId]: {
-        publisherId,
-        comments,
-        likes,
-        content,
-        date,
-        id: _id,
-        author: {
-          profileData: {
-            id: publisherId,
-            firstName,
-            surname,
-            profileImage,
-          },
-        },
-      },
-    };
+    return posts.get(postId);
   }
 
   async putUserPost(pageId, userId, postId, updates) {
@@ -376,13 +331,73 @@ export class User {
 
   async deleteUserPost(pageId, userId, postId) {
     const pageIdUser = await user.findOne({ _id: pageId }, { posts: 1 });
-    const { publisherId } = pageIdUser.posts.get(postId);
+    const {
+      author: { id },
+    } = pageIdUser.posts.get(postId);
 
-    if (Buffer.from(publisherId, 'base64').toString() !== userId && userId !== pageId) {
+    if (Buffer.from(id, 'base64').toString() !== userId && userId !== pageId) {
       throw new Error("You don't have rights to delete this post");
     }
 
     pageIdUser.posts.delete(postId);
+    return await pageIdUser.save();
+  }
+
+  async postPostComment(pageId, authorId, postId, commentId, { text, attachments }) {
+    const {
+      profileData: { firstName, surname, _id, profileImage },
+    } = await user.findOne({ _id: Buffer.from(authorId, 'base64').toString() }, { profileData: 1 });
+
+    const { posts } = await user.findOneAndUpdate(
+      { _id: pageId },
+      {
+        $set: {
+          [`posts.${postId}.comments.${commentId}`]: {
+            id: commentId,
+            author: {
+              id: authorId,
+              firstName,
+              surname,
+              profileImage,
+            },
+            content: {
+              text: text,
+              attachments: attachments,
+            },
+          },
+        },
+      },
+      {
+        useFindAndModify: false,
+        new: true,
+      }
+    );
+
+    return posts.get(postId).comments;
+  }
+
+  async putPostComment(pageId, userId, postId, commentId, updates) {
+    const pageIdUser = await user.findOne({ _id: pageId }, { posts: 1 });
+    const post = pageIdUser.posts.get(postId);
+
+    if (!post) throw new Error('Post not found');
+    if (!post.comments.get(commentId)) throw new Error('Comment not found');
+    if (Buffer.from(post.author.id, 'base64').toString() !== userId && userId !== pageId) throw new Error("You don't have rights to delete this post");
+
+    pageIdUser.posts.get(postId).comments.set(commentId, { ...pageIdUser.posts.get(postId).comments.get(commentId).toObject(), ...updates });
+
+    return await pageIdUser.save();
+  }
+
+  async deletePostComment(pageId, userId, postId, commentId) {
+    const pageIdUser = await user.findOne({ _id: pageId }, { posts: 1 });
+    const post = pageIdUser.posts.get(postId);
+
+    if (!post) throw new Error('Post not found');
+    if (!post.comments.get(commentId)) throw new Error('Comment not found');
+    if (Buffer.from(post.author.id, 'base64').toString() !== userId && userId !== pageId) throw new Error("You don't have rights to delete this post");
+
+    pageIdUser.posts.get(postId).comments.delete(commentId);
     return await pageIdUser.save();
   }
 }

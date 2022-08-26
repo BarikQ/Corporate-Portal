@@ -3,4 +3,5 @@ export const USER_TYPES = {
   friendList: 'friendList',
   profilePage: 'profilePage',
   postAuthor: 'postAuthor',
+  commentAuthor: 'commentAuthor',
 };

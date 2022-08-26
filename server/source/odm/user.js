@@ -77,9 +77,30 @@ const chatSchema = new mongoose.Schema({
 const commentSchema = new mongoose.Schema({
   type: Object,
   
-  userId: {
+  id: {
     type: String,
     required: true,
+  },
+  author: {
+    type: Object,
+    required: true,
+
+    id: {
+      type: String,
+      required: true,
+    },
+    firstName: {
+      type: String,
+      required: true,
+    },
+    surname: {
+      type: String,
+      required: true,
+    },
+    profileImage: {
+      type: String,
+      required: true,
+    },
   },
   content: {
     type: Object,
@@ -95,25 +116,42 @@ const commentSchema = new mongoose.Schema({
     },
   },
   likes: {
-    type: Number,
-    default: 0,
+    type: Array,
+    default: [],
   },
   date: {
     type: String,
     default: () => new Date(),
   }
-})
+}, { _id: false })
 
 const postSchema = new mongoose.Schema({
   type: Object,
 
-  _id: {
+  id: {
     type: String,
     required: true,
   },
-  publisherId: {
-    type: String,
+  author: {
+    type: Object,
     required: true,
+
+    id: {
+      type: String,
+      required: true,
+    },
+    firstName: {
+      type: String,
+      required: true,
+    },
+    surname: {
+      type: String,
+      required: true,
+    },
+    profileImage: {
+      type: String,
+      required: true,
+    },
   },
   content: {
     type: Object,
@@ -141,7 +179,28 @@ const postSchema = new mongoose.Schema({
     type: String,
     default: () => new Date(),
   },
-});
+}, { _id: false });
+
+const friendSchena = new mongoose.Schema({
+  type: Object,
+
+  id: {
+    type: String,
+    required: true,
+  },
+  firstName: {
+    type: String,
+    required: true,
+  },
+  surname: {
+    type: String,
+    required: true,
+  },
+  profileImage: {
+    type: String,
+    required: true,
+  },
+})
 
 const schema = new mongoose.Schema({
   emailDecoded: {

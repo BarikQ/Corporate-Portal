@@ -129,7 +129,7 @@ const deleteUserFriend = async (userId, friendId) => {
   return await axios(axiosConfig);
 };
 
-const createUserPost = async (author = localStorage.getItem('x-token'), pageId, data) => {
+const createUserPost = async (authorId = localStorage.getItem('x-token'), pageId, data) => {
   const axiosConfig = {
     method: 'post',
     baseURL: API_URL,
@@ -137,14 +137,14 @@ const createUserPost = async (author = localStorage.getItem('x-token'), pageId, 
     withCredentials: true,
     data: {
       ...data,
-      publisherId: author,
+      authorId,
     },
   };
 
   return await axios(axiosConfig);
 };
 
-const updateUserPost = async (pageId, userId, postId, updates) => {
+const updateUserPost = async (userId, pageId, postId, updates) => {
   const axiosConfig = {
     method: 'put',
     baseURL: API_URL,
@@ -159,11 +159,60 @@ const updateUserPost = async (pageId, userId, postId, updates) => {
   return await axios(axiosConfig);
 };
 
-const deleteUserPost = async (pageId, userId, postId) => {
+const deleteUserPost = async (userId, pageId, postId) => {
   const axiosConfig = {
     method: 'delete',
     baseURL: API_URL,
     url: `/users/${pageId}/posts/${postId}`,
+    withCredentials: true,
+    data: {
+      userId,
+    },
+  };
+
+  return await axios(axiosConfig);
+};
+
+const createPostComment = async (
+  authorId = localStorage.getItem('x-token'),
+  pageId,
+  postId,
+  data
+) => {
+  const axiosConfig = {
+    method: 'post',
+    baseURL: API_URL,
+    url: `/users/${pageId}/posts/${postId}/comments`,
+    withCredentials: true,
+    data: {
+      ...data,
+      authorId,
+    },
+  };
+
+  return await axios(axiosConfig);
+};
+
+const updatePostComment = async (pageId, userId, postId, commentId, updates) => {
+  const axiosConfig = {
+    method: 'put',
+    baseURL: API_URL,
+    url: `/users/${pageId}/posts/${postId}/comments/${commentId}`,
+    withCredentials: true,
+    data: {
+      updates,
+      userId,
+    },
+  };
+
+  return await axios(axiosConfig);
+};
+
+const deletePostComment = async (pageId, userId, postId, commentId) => {
+  const axiosConfig = {
+    method: 'delete',
+    baseURL: API_URL,
+    url: `/users/${pageId}/posts/${postId}/comments/${commentId}`,
     withCredentials: true,
     data: {
       userId,
@@ -185,4 +234,7 @@ export {
   createUserPost,
   updateUserPost,
   deleteUserPost,
+  createPostComment,
+  updatePostComment,
+  deletePostComment,
 };

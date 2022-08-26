@@ -33,6 +33,7 @@ function Profile() {
     const fetchData = async () => {
       try {
         const { profileData, friends, posts } = await getUserData(profileId);
+
         setUserData({ profileData, friends, posts });
         setIsLoading(false);
       } catch (error) {
@@ -62,7 +63,7 @@ function Profile() {
       const {
         data: { post },
       } = await createUserPost(token, profileId, data);
-      setUserData({ posts: { ...posts, ...post } });
+      setUserData({ posts: { ...posts, [post.id]: { ...post } } });
     } catch (error) {
       const { response } = error;
       console.error(error);
@@ -110,7 +111,7 @@ function Profile() {
         })
       );
       setFriendsRequest('User removed from friends list');
-      setUserData({ friends: friends.filter(({ _id }) => _id !== token) });
+      setUserData({ friends: friends.filter(({ id }) => id !== token) });
     } catch ({ response }) {
       dispatch(
         setAlert({
@@ -139,8 +140,8 @@ function Profile() {
             Send message
           </Link>
           {friends ? (
-            friends.some(({ _id }) => {
-              return _id === token;
+            friends.some(({ id }) => {
+              return id === token;
             }) ? (
               <button
                 className="profile__actions-button profile__actions-button--friends button--default"
@@ -160,10 +161,11 @@ function Profile() {
     }
   }
 
-  function handlePostUpdate({ comments, content, likes, id }) {
-    if (comments || content || likes)
+  function handlePostUpdate(data, id) {
+    console.log('UPDAGE', { ...posts, ...{ [id]: { ...posts[id], ...data } } });
+    if (data)
       return setUserData({
-        posts: { ...posts, ...{ [id]: { ...posts[id], comments, content, likes } } },
+        posts: { ...posts, ...{ [id]: { ...posts[id], ...data } } },
       });
 
     setUserData({
@@ -194,11 +196,11 @@ function Profile() {
               </Link>
               <div className="friends__list">
                 {friends.map((friend) => (
-                  <Link className="friends__item" key={friend._id} to={`/${friend._id}`}>
+                  <Link className="friends__item" key={friend.id} to={`/${friend.id}`}>
                     <User
                       prefix="friends"
                       user={friend}
-                      key={friend._id}
+                      key={friend.id}
                       userType={USER_TYPES.profilePage}
                     />
                   </Link>
@@ -245,10 +247,12 @@ function Profile() {
 
           <div className="posts__list">
             {posts ? (
-              Object.keys(posts)
-                .sort((keyA, keyB) => new Date(posts[keyB].date) - new Date(posts[keyA].date))
-                .map((key) => (
-                  <Post postData={posts[key]} key={key} onPostUpdade={handlePostUpdate} />
+              Object.entries(posts)
+                .sort(
+                  ([keyA, valueA], [keyB, valueB]) => new Date(valueB.date) - new Date(valueA.date)
+                )
+                .map(([key, value]) => (
+                  <Post postData={value} key={key} onPostUpdade={handlePostUpdate} />
                 ))
             ) : (
               <span>No posts here</span>

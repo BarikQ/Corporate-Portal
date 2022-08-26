@@ -82,7 +82,11 @@ export default function Prompt({
             </DialogContentText>
           ) : null}
           {DialogPromptComponent && (
-            <DialogPromptComponent {...DialogPromptComponentParams} onSuccess={handleConfirm} />
+            <DialogPromptComponent
+              key={JSON.stringify({ ...DialogPromptComponentParams })}
+              {...DialogPromptComponentParams}
+              onSuccess={handleConfirm}
+            />
           )}
         </DialogContent>
         <DialogActions>

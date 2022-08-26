@@ -12,6 +12,9 @@ import Preloader from './Preloader/Preloader';
 import Multiselect from './Multiselect/Multiselect';
 import DataGrid from './DataGrid/DataGrid';
 import Prompt from './Prompt/Prompt';
+import Comment from './Comment/Comment';
+import Attachments from './Attachments/Attachments';
+import AudioPlayer from './AudioPlayer/AudioPlayer';
 
 export {
   Header,
@@ -28,4 +31,7 @@ export {
   Multiselect,
   DataGrid,
   Prompt,
+  Comment,
+  Attachments,
+  AudioPlayer,
 };

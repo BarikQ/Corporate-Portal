@@ -50,4 +50,27 @@
     font-size: 14px;
     padding: 1px 4px;
   }
+
+  &--comment {
+    align-items: flex-start;
+    gap: 16px;
+
+    .user__body {
+      padding-bottom: 16px;
+    }
+
+    .user__photo {
+      width: sizes.$comment-profile-image;
+      height: sizes.$comment-profile-image;
+    }
+
+    .user__name {
+      font-size: sizes.$comment-author-font-size;
+      font-weight: 500;
+    }
+
+    .user__info--top {
+      padding: 0;
+    }
+  }
 }

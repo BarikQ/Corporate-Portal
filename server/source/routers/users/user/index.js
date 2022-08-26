@@ -29,7 +29,6 @@ export const putUser = async (req, res) => {
     const user = new User();
     const userTargetId = Buffer.from(_id || token, 'base64').toString();
 
-    console.log(userData);
     if (isAdminPage && (newPassword || newPasswordRepeat)) password = true;
 
     try {
@@ -91,12 +90,10 @@ export const putUser = async (req, res) => {
 
 export const deleteUser = async (req, res) => {
   try {
-    console.log(req.params);
     const { token } = req.session.user;
     const _id = req.params.id;
     const userTargetId = Buffer.from(_id || token, 'base64').toString();
     const user = new User();
-    // throw new Error('zalipa');
 
     user.deleteUser(userTargetId);
 
@@ -188,12 +185,11 @@ export const deleteUserFriend = async (req, res) => {
 export const postUserPost = async (req, res) => {
   try {
     const _id = Buffer.from(req.params.id, 'base64').toString();
-    const { text, attachments, publisherId } = req.body;
+    const { text, attachments, authorId } = req.body;
     const newPostId = mongoose.Types.ObjectId();
 
     const data = {
       text,
-      publisherId,
       attachments: await Promise.all(
         await attachments.map(async ({ value, name, type }, index) => {
           const { resource_type, url } = await fileUploader(value, {
@@ -208,7 +204,7 @@ export const postUserPost = async (req, res) => {
     };
 
     const user = await new User();
-    const post = await user.postUserPost(_id, data, newPostId);
+    const post = await user.postUserPost(_id, authorId, newPostId, data);
     res.status(200).json({ post });
   } catch (error) {
     console.log(error.message);
@@ -218,27 +214,28 @@ export const postUserPost = async (req, res) => {
 
 export const putUserPost = async (req, res) => {
   try {
-    const pageId = req.params.id;
     const postId = req.params.postId;
     const pageIdDecoded = Buffer.from(req.params.id, 'base64').toString();
     const { updates, userId } = req.body;
 
     const user = await new User();
     const { posts } = await user.getUser({ _id: pageIdDecoded });
-    if (updates.content && posts[postId].publisherId !== userId) return res.status(400).json({ message: "You don't have access to edit this post" });
 
-    updates.content.attachments = await Promise.all(
-      await updates.content.attachments.map(async ({ value, name, type, url }, index) => {
-        if (url) return { type, url, name };
-        const uploadedData = await fileUploader(value, {
-          folder: `${mainRoute}/Users/${pageIdDecoded}/posts/${postId}`,
-          use_filename: true,
-          unique_filename: false,
-        });
+    if (updates.content && posts.get(postId).author.id !== userId) return res.status(400).json({ message: "You don't have access to edit this post" });
 
-        return { type: type || uploadedData.resource_type, url: uploadedData.url, name };
-      })
-    );
+    if (updates.content)
+      updates.content.attachments = await Promise.all(
+        await updates.content.attachments.map(async ({ value, name, type, url }, index) => {
+          if (url) return { type, url, name };
+          const uploadedData = await fileUploader(value, {
+            folder: `${mainRoute}/Users/${pageIdDecoded}/posts/${postId}`,
+            use_filename: true,
+            unique_filename: false,
+          });
+
+          return { type: type || uploadedData.resource_type, url: uploadedData.url, name };
+        })
+      );
 
     const updatedUser = await user.putUserPost(pageIdDecoded, userId, postId, updates);
 
@@ -253,12 +250,96 @@ export const deleteUserPost = async (req, res) => {
   try {
     const { id, postId } = req.params;
     const { userId } = req.body;
-    console.log(id, postId, userId);
     const userIdDecoded = Buffer.from(userId, 'base64').toString();
     const pageIdDecoded = Buffer.from(id, 'base64').toString();
 
     const user = await new User();
     await user.deleteUserPost(pageIdDecoded, userIdDecoded, postId);
+
+    res.sendStatus(204);
+  } catch (error) {
+    console.log(error.message);
+    res.status(400).json({ message: 'Failed to delete post' });
+  }
+};
+
+export const postPostComment = async (req, res) => {
+  try {
+    const { id, postId } = req.params;
+    const pageIdDecoded = Buffer.from(id, 'base64').toString();
+
+    const { text, attachments, authorId } = req.body;
+    const newCommentId = mongoose.Types.ObjectId();
+
+    const data = {
+      text,
+      attachments: await Promise.all(
+        await attachments.map(async ({ value, name, type }, index) => {
+          const { resource_type, url } = await fileUploader(value, {
+            folder: `${mainRoute}/Users/${pageIdDecoded}/posts/${postId}/comments/${newCommentId}`,
+            use_filename: true,
+            unique_filename: false,
+          });
+
+          return { type: type || resource_type, url, name };
+        })
+      ),
+    };
+
+    const user = await new User();
+    const comments = await user.postPostComment(pageIdDecoded, authorId, postId, newCommentId, data);
+    res.status(200).json({ comments });
+  } catch (error) {
+    console.log(error.message);
+    res.status(400).json({ message: 'Failed to create post' });
+  }
+};
+
+export const putPostComment = async (req, res) => {
+  try {
+    const { id, postId, commentId } = req.params;
+    const { updates, userId } = req.body;
+    const userIdDecoded = Buffer.from(userId, 'base64').toString();
+    const pageIdDecoded = Buffer.from(id, 'base64').toString();
+
+    const user = await new User();
+    const { posts } = await user.getUser({ _id: pageIdDecoded });
+    if (posts.get(postId)) {
+      if (updates.content && posts.get(postId).author.id !== userId) return res.status(400).json({ message: "You don't have access to edit this post" });
+    } else throw new Error('Post not found');
+
+    if (updates.content)
+      updates.content.attachments = await Promise.all(
+        await updates.content.attachments.map(async ({ value, name, type, url }, index) => {
+          if (url) return { type, url, name };
+          const uploadedData = await fileUploader(value, {
+            folder: `${mainRoute}/Users/${pageIdDecoded}/posts/${postId}/comments/${commentId}`,
+            use_filename: true,
+            unique_filename: false,
+          });
+
+          return { type: type || uploadedData.resource_type, url: uploadedData.url, name };
+        })
+      );
+
+    const updatedUser = await user.putPostComment(pageIdDecoded, userIdDecoded, postId, commentId, updates);
+
+    res.status(200).json({ comment: updatedUser.posts.get(postId).comments.get(commentId) });
+  } catch (error) {
+    console.log(error.message);
+    res.status(400).json({ message: error.message || 'Failed to update post' });
+  }
+};
+
+export const deletePostComment = async (req, res) => {
+  try {
+    const { id, postId, commentId } = req.params;
+    const { userId } = req.body;
+    const userIdDecoded = Buffer.from(userId, 'base64').toString();
+    const pageIdDecoded = Buffer.from(id, 'base64').toString();
+
+    const user = await new User();
+    await user.deletePostComment(pageIdDecoded, userIdDecoded, postId, commentId);
 
     res.sendStatus(204);
   } catch (error) {

@@ -48,7 +48,6 @@ export const post = async (req, res) => {
       throw new Error(JSON.stringify({ email: 'User with this email already exists' }));
     }
 
-    // setTimeout(() => {res.sendStatus(400)}, 5000);
     const data = await user.create();
 
     if (!isAdminPage) {
@@ -58,7 +57,6 @@ export const post = async (req, res) => {
       req.session.user = { token: token, accessToken: userData.accessToken };
       return res.status(200).json({ message: 'You have been sign up' })
     } else {
-      console.log(data);
       const { _id, profileData, emailDecoded, passwordDecoded, created, role } = data;
       return res.status(200).json({ id: _id, profileData, emailDecoded, passwordDecoded, created, role });
     }
