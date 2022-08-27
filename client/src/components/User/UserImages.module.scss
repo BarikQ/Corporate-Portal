@@ -1,0 +1,11 @@
+@use 'assets/styles/_constants.scss' as sizes;
+
+.postAuthor {
+  width: sizes.$sm-profile-image;
+  height: sizes.$sm-profile-image;
+}
+
+.comemntAuthor {
+  width: sizes.$xs-profile-image;
+  height: sizes.$xs-profile-image;
+}

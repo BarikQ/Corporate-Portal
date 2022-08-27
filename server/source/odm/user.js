@@ -4,7 +4,7 @@ import { v4 } from 'uuid';
 
 const attachmentSchema = new mongoose.Schema({
   type: Object,
-  
+
   type: {
     type: String,
     required: true,
@@ -17,7 +17,7 @@ const attachmentSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-})
+});
 
 const messageSchema = new mongoose.Schema({
   type: Object,
@@ -74,112 +74,118 @@ const chatSchema = new mongoose.Schema({
   },
 });
 
-const commentSchema = new mongoose.Schema({
-  type: Object,
-  
-  id: {
-    type: String,
-    required: true,
-  },
-  author: {
+const commentSchema = new mongoose.Schema(
+  {
     type: Object,
-    required: true,
 
     id: {
       type: String,
       required: true,
     },
-    firstName: {
-      type: String,
+    author: {
+      type: Object,
       required: true,
-    },
-    surname: {
-      type: String,
-      required: true,
-    },
-    profileImage: {
-      type: String,
-      required: true,
-    },
-  },
-  content: {
-    type: Object,
-    default: {},
-    required: true,
 
-    text: {
-      type: String,
+      id: {
+        type: String,
+        required: true,
+      },
+      firstName: {
+        type: String,
+        required: true,
+      },
+      surname: {
+        type: String,
+        required: true,
+      },
+      profileImage: {
+        type: String,
+        required: true,
+      },
     },
-    attachments: {
+    content: {
+      type: Object,
+      default: {},
+      required: true,
+
+      text: {
+        type: String,
+      },
+      attachments: {
+        type: Array,
+        of: attachmentSchema,
+      },
+    },
+    likes: {
       type: Array,
-      of: attachmentSchema,
+      default: [],
+    },
+    date: {
+      type: String,
+      default: () => new Date(),
     },
   },
-  likes: {
-    type: Array,
-    default: [],
-  },
-  date: {
-    type: String,
-    default: () => new Date(),
-  }
-}, { _id: false })
+  { _id: false }
+);
 
-const postSchema = new mongoose.Schema({
-  type: Object,
-
-  id: {
-    type: String,
-    required: true,
-  },
-  author: {
+const postSchema = new mongoose.Schema(
+  {
     type: Object,
-    required: true,
 
     id: {
       type: String,
       required: true,
     },
-    firstName: {
-      type: String,
+    author: {
+      type: Object,
       required: true,
-    },
-    surname: {
-      type: String,
-      required: true,
-    },
-    profileImage: {
-      type: String,
-      required: true,
-    },
-  },
-  content: {
-    type: Object,
-    default: {},
-    required: true,
 
-    text: {
-      type: String,
+      id: {
+        type: String,
+        required: true,
+      },
+      firstName: {
+        type: String,
+        required: true,
+      },
+      surname: {
+        type: String,
+        required: true,
+      },
+      profileImage: {
+        type: String,
+        required: true,
+      },
     },
-    attachments: {
+    content: {
+      type: Object,
+      default: {},
+      required: true,
+
+      text: {
+        type: String,
+      },
+      attachments: {
+        type: Array,
+        of: attachmentSchema,
+      },
+    },
+    comments: {
+      type: Map,
+      default: new Map(),
+      of: commentSchema,
+    },
+    likes: {
       type: Array,
-      of: attachmentSchema,
+      default: [],
+    },
+    date: {
+      type: String,
+      default: () => new Date(),
     },
   },
-  comments: {
-    type: Map,
-    default: new Map(),
-    of: commentSchema,
-  },
-  likes: {
-    type: Array,
-    default: [],
-  },
-  date: {
-    type: String,
-    default: () => new Date(),
-  },
-}, { _id: false });
+  { _id: false }
+);
 
 const friendSchena = new mongoose.Schema({
   type: Object,
@@ -200,7 +206,7 @@ const friendSchena = new mongoose.Schema({
     type: String,
     required: true,
   },
-})
+});
 
 const schema = new mongoose.Schema({
   emailDecoded: {
@@ -280,6 +286,77 @@ const schema = new mongoose.Schema({
     friend: {
       type: String,
       default: null,
+    },
+  },
+  privacy: {
+    type: Object,
+    default: {
+      blackList: [],
+      messages: {
+        allow: [],
+        deny: [],
+      },
+      profile: {
+        allow: [],
+        deny: [],
+      },
+    },
+
+    blackList: {
+      type: Array,
+      default: [],
+
+      id: {
+        type: String,
+      },
+    },
+    messages: {
+      type: Object,
+      default: {
+        allow: [],
+        deny: null,
+      },
+
+      allow: {
+        type: Array,
+        default: [],
+
+        id: {
+          type: String,
+        },
+      },
+      deny: {
+        type: Array,
+        default: null,
+
+        id: {
+          type: String,
+        },
+      },
+    },
+    profile: {
+      type: Object,
+      default: {
+        allow: [],
+        deny: null,
+      },
+
+      allow: {
+        type: Array,
+        default: [],
+
+        id: {
+          type: String,
+        },
+      },
+      deny: {
+        type: Array,
+        default: null,
+
+        id: {
+          type: String,
+        },
+      },
     },
   },
   notifications: {

@@ -1,6 +1,7 @@
 import { signUpRequest, signInRequest, authRequest, logoutRequest } from './auth';
 import {
   updateUserData,
+  updateUserPrivacy,
   getUserData,
   getUsers,
   deleteUser,
@@ -21,6 +22,7 @@ export {
   signInRequest,
   authRequest,
   updateUserData,
+  updateUserPrivacy,
   getUserData,
   logoutRequest,
   getUsers,

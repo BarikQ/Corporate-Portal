@@ -256,7 +256,7 @@ export default function Post({ postData, onPostUpdade, className, ...props }) {
 
       <div className="post__content border--bottom--grey">
         <span className="post__text">{text}</span>
-        {attachments && (
+        {Boolean(attachments.length) && (
           <Attachments
             graphics={graphics}
             audio={audio}

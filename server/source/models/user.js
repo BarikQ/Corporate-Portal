@@ -43,11 +43,16 @@ export class User {
   }
 
   async getUser(userId) {
-    const { _id, profileData, friends, posts } = await user.findOne(userId, {
-      profileData: 1,
-      friends: 1,
-      posts: 1,
-    });
+    const { profileData, friends, posts, privacy } = await user.findOne(
+      { _id: userId },
+      {
+        profileData: 1,
+        friends: 1,
+        posts: 1,
+        privacy: 1,
+      }
+    );
+
     const decodedFriends = friends.map((friend) => Buffer.from(friend, 'base64').toString());
     const friendsDocs = await user.find({ _id: decodedFriends }, { profileData: 1 }).limit(6);
     const sortedFriends = friendsDocs.map(({ profileData, _id }) => {
@@ -57,10 +62,11 @@ export class User {
       };
     });
 
-    return { id: userId, profileData, friends: sortedFriends, posts };
+    return { id: Buffer.from(userId.toString()).toString('base64'), profileData, friends: sortedFriends, posts, privacy };
   }
 
   async updateUser(userId, userData) {
+    // console.log('123321', dot.flatten(userData));
     return await user.updateOne({ _id: userId }, dot.flatten(userData), {
       useFindAndModify: false,
       returnOriginal: false,

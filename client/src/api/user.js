@@ -7,14 +7,21 @@ const updateUserData = async (
   userId = localStorage.getItem('x-token'),
   isAdminPage = false
 ) => {
-  const data = Object.keys(formData).reduce((accumulator, key, index) => {
-    if (!Array.isArray(formData[key].value)) accumulator[key] = btoa(formData[key].value);
-    else accumulator[key] = formData[key].value.map((item) => btoa(item));
+  let data = null;
+  let sendedData = null;
 
-    return accumulator;
-  }, {});
+  if (!formData.privacy) {
+    data = Object.keys(formData).reduce((accumulator, key, index) => {
+      if (!Array.isArray(formData[key].value)) accumulator[key] = btoa(formData[key].value);
+      else accumulator[key] = formData[key].value.map((item) => btoa(item));
 
-  const sendedData = { profileData: data };
+      return accumulator;
+    }, {});
+
+    sendedData = { profileData: data };
+  } else {
+    sendedData = formData;
+  }
 
   if (isAdminPage) {
     sendedData.role = data.role;
@@ -30,6 +37,20 @@ const updateUserData = async (
     params: {
       isAdminPage,
     },
+  };
+
+  return await axios(axiosConfig);
+};
+
+const updateUserPrivacy = async (userId = localStorage.getItem('x-token'), data) => {
+  console.log(data);
+
+  const axiosConfig = {
+    method: 'put',
+    baseURL: API_URL,
+    url: `/users/${userId}`,
+    withCredentials: true,
+    data,
   };
 
   return await axios(axiosConfig);
@@ -224,6 +245,7 @@ const deletePostComment = async (pageId, userId, postId, commentId) => {
 
 export {
   updateUserData,
+  updateUserPrivacy,
   getUserData,
   getUsers,
   deleteUser,

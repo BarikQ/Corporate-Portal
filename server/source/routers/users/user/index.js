@@ -9,12 +9,13 @@ const cloudinaryRoute = 'iTechArt/Portal/Users';
 
 export const getUser = async (req, res) => {
   try {
-    const _id = Buffer.from(req.params.id, 'base64').toString();
+    const userId = Buffer.from(req.params.id, 'base64').toString();
     const user = await new User();
-    const data = await user.getUser({ _id });
+    const data = await user.getUser(userId);
 
     res.status(200).json(data);
   } catch (error) {
+    console.log(error);
     res.status(404).json({ message: 'User not found' });
   }
 };
@@ -23,14 +24,15 @@ export const putUser = async (req, res) => {
   try {
     const userData = req.body;
     const { token, role, accessToken } = req.session.user;
-    const _id = req.params.id;
+    const userId = req.params.id;
     const { isAdminPage } = req.query;
-    let { profileImage, password, newPassword, newPasswordRepeat } = userData.profileData;
+    let profileImage, password, newPassword, newPasswordRepeat;
+    if (userData.profileData) ({ profileImage, password, newPassword, newPasswordRepeat } = userData.profileData);
     const user = new User();
-    const userTargetId = Buffer.from(_id || token, 'base64').toString();
+    const userTargetId = Buffer.from(userId || token, 'base64').toString();
 
     if (isAdminPage && (newPassword || newPasswordRepeat)) password = true;
-
+    console.log(userData);
     try {
       if (profileImage) {
         const cloudinaryResult = await cloudinary.v2.uploader.upload(

@@ -1,12 +1,14 @@
 import React from 'react';
+import moment from 'moment';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
+import { Avatar } from '@mui/material';
 
 import { calculateAge } from 'utils';
 import { USER_TYPES } from 'constants';
 
+import styles from './UserImages.module.scss';
 import './User.scss';
-import moment from 'moment';
 
 User.propTypes = {
   className: PropTypes.string,
@@ -70,10 +72,7 @@ function User({
         return (
           <div className={`user user--comment ${className} ${prefix ? `${prefix}-user` : ''}`}>
             <Link to={`/${id}`} className={`user__photo ${prefix ? `${prefix}-user__photo` : ''}`}>
-              <img
-                className={`user__image ${prefix ? prefix + '-user__image' : ''}`}
-                src={profileImage}
-              />
+              <Avatar src={profileImage} className={styles.commentAuthor} />
             </Link>
 
             <div
@@ -92,10 +91,7 @@ function User({
         return (
           <div className={`user ${className} ${prefix ? `${prefix}-user` : ''}`}>
             <Link to={`/${id}`} className={`user__photo ${prefix ? `${prefix}-user__photo` : ''}`}>
-              <img
-                className={`user__image ${prefix ? prefix + '-user__image' : ''}`}
-                src={profileImage}
-              />
+              <Avatar src={profileImage} className={styles.postAuthor} />
             </Link>
 
             <div className={`user__body ${prefix ? `${prefix}-user__body` : ''}`}>
@@ -122,9 +118,9 @@ function User({
         return (
           <div className={`user ${className} ${prefix ? `${prefix}-user` : ''}`}>
             <Link to={`/${id}`} className={`user__photo ${prefix ? `${prefix}-user__photo` : ''}`}>
-              <img
-                className={`user__image ${prefix ? prefix + '-user__image' : ''}`}
+              <Avatar
                 src={profileImage}
+                className={`user__image ${prefix ? prefix + '-user__image' : ''}`}
               />
             </Link>
 

@@ -25,7 +25,7 @@ AccountSettings.propTypes = {
   onSuccess: PropTypes.func,
 };
 
-export default function AccountSettings({ isAdminPage = false, adminData: { id }, onSuccess }) {
+export default function AccountSettings({ isAdminPage = false, adminData, onSuccess }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const [formTemplate, setFormTemplate] = useState(null);
@@ -38,7 +38,7 @@ export default function AccountSettings({ isAdminPage = false, adminData: { id }
       {
         placeholder: 'Current Password',
         name: 'password',
-        id: `current-password${id && `-${id}`}`,
+        id: `current-password${adminData && `-${adminData.id}`}`,
         type: 'password',
         autocomplete: 'new-password',
         value: '',
@@ -47,7 +47,7 @@ export default function AccountSettings({ isAdminPage = false, adminData: { id }
       {
         placeholder: 'New password',
         name: 'newPassword',
-        id: `new-password${id && `-${id}`}`,
+        id: `new-password${adminData && `-${adminData.id}`}`,
         type: 'password',
         autocomplete: 'new-password',
         value: '',
@@ -58,7 +58,7 @@ export default function AccountSettings({ isAdminPage = false, adminData: { id }
       {
         placeholder: 'Repeat new password',
         name: 'newPasswordRepeat',
-        id: `new-password-repeat${id && `-${id}`}`,
+        id: `new-password-repeat${adminData && `-${adminData.id}`}`,
         type: 'password',
         autocomplete: 'new-password',
         value: '',
@@ -86,7 +86,7 @@ export default function AccountSettings({ isAdminPage = false, adminData: { id }
 
   async function handlePasswordChange(event, data) {
     try {
-      await updateUserData(data, id, isAdminPage);
+      await updateUserData(data, adminData?.id, isAdminPage);
       dispatch(
         setAlert({
           message: 'Password was changed successfully',
@@ -143,7 +143,7 @@ export default function AccountSettings({ isAdminPage = false, adminData: { id }
             className={`account__block account__block--password ${
               !isAdminPage && 'border--bottom--grey'
             }`}>
-            <h3 className="account__block-title">Change password</h3>
+            <h3 className="settings__block-title">Change password</h3>
             <Form
               formTemplate={formTemplate}
               className="settings__form settings__form--profile"
