@@ -21,7 +21,7 @@ const initialState = {
 function Profile() {
   const { profileId } = useParams();
   const { token } = useToken();
-  const [{ profileData, posts, friends }, setUserData] = useReducer(
+  const [{ profileData, posts, friends, access }, setUserData] = useReducer(
     (currentValues, newValues) => ({ ...currentValues, ...newValues }),
     initialState
   );
@@ -32,9 +32,9 @@ function Profile() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const { profileData, friends, posts } = await getUserData(profileId);
-
-        setUserData({ profileData, friends, posts });
+        const { profileData, friends, posts, access } = await getUserData(profileId);
+        console.log(access);
+        setUserData({ profileData, friends, posts, access });
         setIsLoading(false);
       } catch (error) {
         const { response } = error;
@@ -132,6 +132,7 @@ function Profile() {
         </Link>
       );
     } else {
+      console.log(friends);
       return (
         <>
           <Link
@@ -179,86 +180,111 @@ function Profile() {
     <div className="profile">
       <div className="profile__column profile__column--narrow">
         <div className="profile__photo page__block">
-          <div className="profile__photo-wrapper border--bottom--grey">
+          <div className="profile__photo-wrapper">
             <img className="profile__photo-image" src={profileData?.profileImage} />
           </div>
 
-          <div className="profile__actions">{sortUserAvailableActions()}</div>
-        </div>
+          {!access.messages && !access.profile ? null : (
+            <>{access.messages && <div className="line-divider" />}</>
+          )}
 
-        <div className="profile__friends friends page__block">
-          {friends && friends.length ? (
+          {!access.messages && !access.profile ? null : (
             <>
-              <Link
-                className="friends__title link--default"
-                to={isCurrentUserPage() ? '/friends' : `/friends?id=${profileId}`}>
-                Friends
-              </Link>
-              <div className="friends__list">
-                {friends.map((friend) => (
-                  <Link className="friends__item" key={friend.id} to={`/${friend.id}`}>
-                    <User
-                      prefix="friends"
-                      user={friend}
-                      key={friend.id}
-                      userType={USER_TYPES.profilePage}
-                    />
-                  </Link>
-                ))}
-              </div>
+              {access.messages && (
+                <div className="profile__actions">{sortUserAvailableActions()}</div>
+              )}
             </>
-          ) : (
-            <span className="profile__friends-title">This user has no friends (KEKW)</span>
           )}
         </div>
+
+        {access.profile && (
+          <div className="profile__friends friends page__block">
+            {friends && friends.length ? (
+              <>
+                <Link
+                  className="friends__title link--default"
+                  to={isCurrentUserPage() ? '/friends' : `/friends?id=${profileId}`}>
+                  Friends
+                </Link>
+                <div className="friends__list">
+                  {friends.map((friend) => (
+                    <Link className="friends__item" key={friend.id} to={`/${friend.id}`}>
+                      <User
+                        prefix="friends"
+                        user={friend}
+                        key={friend.id}
+                        userType={USER_TYPES.profilePage}
+                      />
+                    </Link>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <span className="profile__friends-title">This user has no friends (KEKW)</span>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="profile__column profile__column--wide">
-        <div className="profile__info page__block">
+        <div
+          className={`profile__info page__block ${access.profile ? '' : 'profile__info--denied'}`}>
           <div className="profile__info-up border--bottom--grey">
             <h1 className="profile__info-name">{`${profileData.firstName} ${profileData.surname}`}</h1>
             <span className="profile__info-status">{profileData.status}</span>
           </div>
+
           <div className="profile__info-down info border--bottom--grey">
             {profileData.city ? <LabeledItem label="City" value={profileData.city} /> : null}
-            <LabeledItem
-              label="Birth Date"
-              value={`${profileData.birthDate}, ${calculateAge(profileData.birthDate)} y.o.`}
-            />
-            {profileData.technologies.length ? (
+            {profileData.birthDate && (
+              <LabeledItem
+                label="Birth Date"
+                value={`${profileData.birthDate}, ${calculateAge(profileData.birthDate)} y.o.`}
+              />
+            )}
+            {profileData.technologies && profileData.technologies.length ? (
               <LabeledItem label="Stack" value={profileData.technologies.join(', ')} />
             ) : null}
           </div>
-          {/* <div className="profile__stats"></div> */}
+          {!access.profile && (
+            <div className="profile__access">
+              <span className="profile__access-message">
+                {profileData.firstName} {profileData.surname} restricted access to his page
+              </span>
+            </div>
+          )}
         </div>
 
-        <div className="profile__posts posts">
-          <div className="posts__header page__block">
-            <div className="posts__editor editor">
-              <EditableForm
-                type="post"
-                classPrefix="editor"
-                submitHandler={handlePostSubmit}
-                withAttachment
-                id={profileId}
-              />
+        {access.profile && (
+          <div className="profile__posts posts">
+            <div className="posts__header page__block">
+              <div className="posts__editor editor">
+                <EditableForm
+                  type="post"
+                  classPrefix="editor"
+                  submitHandler={handlePostSubmit}
+                  withAttachment
+                  id={profileId}
+                />
+              </div>
+            </div>
+
+            <div className="posts__list">
+              {posts ? (
+                Object.entries(posts)
+                  .sort(
+                    ([keyA, valueA], [keyB, valueB]) =>
+                      new Date(valueB.date) - new Date(valueA.date)
+                  )
+                  .map(([key, value]) => (
+                    <Post postData={value} key={key} onPostUpdade={handlePostUpdate} />
+                  ))
+              ) : (
+                <span>No posts here</span>
+              )}
             </div>
           </div>
-
-          <div className="posts__list">
-            {posts ? (
-              Object.entries(posts)
-                .sort(
-                  ([keyA, valueA], [keyB, valueB]) => new Date(valueB.date) - new Date(valueA.date)
-                )
-                .map(([key, value]) => (
-                  <Post postData={value} key={key} onPostUpdade={handlePostUpdate} />
-                ))
-            ) : (
-              <span>No posts here</span>
-            )}
-          </div>
-        </div>
+        )}
       </div>
     </div>
   ) : isLoading ? (

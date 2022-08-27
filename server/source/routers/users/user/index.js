@@ -10,8 +10,10 @@ const cloudinaryRoute = 'iTechArt/Portal/Users';
 export const getUser = async (req, res) => {
   try {
     const userId = Buffer.from(req.params.id, 'base64').toString();
+    const { token, role, accessToken } = req.session.user;
+    const requesterId = Buffer.from(token, 'base64').toString();
     const user = await new User();
-    const data = await user.getUser(userId);
+    const data = await user.getUser(userId, token);
 
     res.status(200).json(data);
   } catch (error) {

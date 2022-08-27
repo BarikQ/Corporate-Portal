@@ -15,8 +15,8 @@ export class User {
     return await this.models.user.allowAccess(accessToken);
   }
 
-  async getUser(userId) {
-    return await this.models.user.getUser(userId);
+  async getUser(userId, requester) {
+    return await this.models.user.getUser(userId, requester);
   }
 
   async updateUser(userId, userData) {

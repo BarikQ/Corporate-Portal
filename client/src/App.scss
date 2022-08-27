@@ -108,6 +108,13 @@
   }
 }
 
+.line-divider {
+  width: 100%;
+  height: 1px;
+  margin: 16px 0;
+  background: colors.$button-background-light-gray;
+}
+
 .border--bottom--grey {
   border-bottom: 1px solid colors.$button-background-light-gray;
 }

@@ -42,7 +42,7 @@ export class User {
     return await user.findOne({ accessToken });
   }
 
-  async getUser(userId) {
+  async getUser(userId, requester) {
     const { profileData, friends, posts, privacy } = await user.findOne(
       { _id: userId },
       {
@@ -52,6 +52,30 @@ export class User {
         privacy: 1,
       }
     );
+    const access = { profile: true, messages: true };
+    const { profileImage, firstName, surname, city, birthDate } = profileData;
+
+    if (Buffer.from(userId.toString()).toString('base64') !== requester) {
+      if (privacy.blackList && privacy.blackList.includes(requester)) {
+        access.profile = false;
+        access.messages = false;
+      } else {
+        if (privacy.profile && privacy.profile.deny.includes(requester)) {
+          access.profile = false;
+        }
+        if (privacy.profile && privacy.messages.deny.includes(requester)) {
+          access.messages = false;
+        }
+      }
+    }
+
+    if (!access.profile)
+      return {
+        id: Buffer.from(userId.toString()).toString('base64'),
+        profileData: { profileImage, firstName, surname, city, birthDate },
+        friends: friends.includes(requester) ? [requester] : [],
+        access,
+      };
 
     const decodedFriends = friends.map((friend) => Buffer.from(friend, 'base64').toString());
     const friendsDocs = await user.find({ _id: decodedFriends }, { profileData: 1 }).limit(6);
@@ -62,11 +86,10 @@ export class User {
       };
     });
 
-    return { id: Buffer.from(userId.toString()).toString('base64'), profileData, friends: sortedFriends, posts, privacy };
+    return { id: Buffer.from(userId.toString()).toString('base64'), profileData, friends: sortedFriends, posts, privacy, access };
   }
 
   async updateUser(userId, userData) {
-    // console.log('123321', dot.flatten(userData));
     return await user.updateOne({ _id: userId }, dot.flatten(userData), {
       useFindAndModify: false,
       returnOriginal: false,

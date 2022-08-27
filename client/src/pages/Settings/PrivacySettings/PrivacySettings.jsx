@@ -168,7 +168,7 @@ export default function PrivacySettings() {
         );
 
       window.addEventListener('scroll', closeSelects);
-
+      console.log(privacy);
       setUsers(refactoredUsers(data));
       setPrivacySettings(privacy);
       setInitialSelectStates(initialSelects);
