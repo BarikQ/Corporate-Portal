@@ -1,2 +1,2 @@
-export { NotFoundError } from './notFoundError';
-export { ValidationError } from './validationError';
+export { NotFoundError } from './notFoundError.js';
+export { ValidationError } from './validationError.js';

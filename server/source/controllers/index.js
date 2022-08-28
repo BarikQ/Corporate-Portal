@@ -1,2 +1,2 @@
-export { User } from './user';
-export { Auth } from './auth';
+export { User } from './user.js';
+export { Auth } from './auth.js';

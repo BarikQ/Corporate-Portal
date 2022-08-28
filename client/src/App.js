@@ -132,8 +132,11 @@ function App() {
       <ThemeProvider theme={theme}>
         <div className={`app ${location.pathname === '/' ? 'app--welcome' : ''}`}>
           <Header />
-          <main className={`main ${location.pathname.includes('/admin') ? 'main--admin' : ''}`}>
-            {location.pathname === '/' || location.pathname.includes('/admin') ? null : (
+          <main
+            className={`main ${
+              location.pathname.includes('/admin') && !'true' ? 'main--admin' : ''
+            }`}>
+            {location.pathname === '/' ? null : (
               <div className="main__nav sidebar">
                 <Navigation routes={mainLinks} />
               </div>

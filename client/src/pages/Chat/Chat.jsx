@@ -6,6 +6,7 @@ import { Message, EditableForm, Preloader } from 'components';
 import { ReactComponent as BackArrowIcon } from 'assets/images/back-arrow.svg';
 import { getChatMessages } from 'api';
 import { SocketContext } from 'context/socket';
+import { useToken } from 'hooks';
 import { setAlert, removeError } from 'store/actions';
 
 import './Chat.scss';
@@ -14,9 +15,11 @@ function Chat() {
   const messagesEndRef = useRef(null);
   const { chatId } = useParams();
   const profileId = localStorage.getItem('x-token');
+  const { token } = useToken();
   const [messages, setMessages] = useState(null);
   const [usersList, setUsersList] = useState({});
   const [chatName, setChatName] = useState('');
+  const [{ blackList, messages: messagesPrivacy }, setPrivacy] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const socket = useContext(SocketContext);
   const dispatch = useDispatch();
@@ -42,13 +45,15 @@ function Chat() {
 
   async function getChatData() {
     try {
-      const { data } = await getChatMessages(profileId, chatId);
-      const { messages, users, id, name } = data;
+      const { data } = await getChatMessages(token, chatId);
 
+      const { messages, users, id, name, privacy } = data;
+      console.log(data);
+      if (privacy) setPrivacy(privacy);
       setUsersList(users);
 
       for (const [key, value] of Object.entries(users)) {
-        if (key !== profileId) {
+        if (key !== token) {
           setChatName(`${value.firstName} ${value.surname}`);
           break;
         }
@@ -147,7 +152,15 @@ function Chat() {
       </div>
 
       <div className="chat__input">
-        <EditableForm submitHandler={handleFormSubmit} withAttachment type="send" />
+        {(blackList && blackList.includes(token)) ||
+        (messagesPrivacy && messagesPrivacy.deny && messagesPrivacy.deny.includes(token)) ? (
+          <span className="chat__deny">
+            You cannot send a message to this user because he limits the circle of people who can
+            send messages to him
+          </span>
+        ) : (
+          <EditableForm submitHandler={handleFormSubmit} withAttachment type="send" />
+        )}
       </div>
     </div>
   );

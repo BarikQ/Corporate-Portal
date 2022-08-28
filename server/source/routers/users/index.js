@@ -6,7 +6,7 @@ import { limiter, validator, authenticate, dataDecoder, dataEncoder } from '../.
 // Schemas
 import { createUser } from '../../schemas';
 
-import { get, post } from './route';
+import { get, post } from './route.js';
 import {
   getUser,
   putUser,

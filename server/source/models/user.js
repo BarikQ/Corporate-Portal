@@ -7,20 +7,20 @@ import { mainRoute } from '../constants';
 
 const cloudFolder = 'Users';
 
-function addMessageCb(error, user, targetUser, message) {
+function addMessageCb(error, user, { receiverId, receiverName }, message) {
   const currentUserId = Buffer.from(user._id.toString()).toString('base64');
-
-  if (!user.chats.get(targetUser)) {
-    user.chats.set(targetUser, {
-      users: [currentUserId, targetUser],
-      name: `${user.profileData.firstName} ${user.profileData.surname}`,
-      id: targetUser,
+  console.log(receiverId);
+  if (!user.chats.get(receiverId)) {
+    user.chats.set(receiverId, {
+      users: [currentUserId, receiverId],
+      name: receiverName,
+      id: receiverId,
       messages: [message],
     });
   } else {
-    const aaa = user.chats.get(targetUser);
-    aaa.messages.push(message);
-    user.chats.set(targetUser, aaa);
+    const chat = user.chats.get(receiverId);
+    chat.messages.push(message);
+    user.chats.set(receiverId, chat);
   }
 
   user.save((err, res) => {
@@ -196,13 +196,14 @@ export class User {
     const currentUser = await user.findOne({ _id: Buffer.from(userId, 'base64').toString() }, { profileData: 1, chats: 1 });
 
     if (!currentUser.chats || !currentUser.chats.get(chatId)) {
-      const { _id, profileData } = await user.findOne({ _id: Buffer.from(chatId, 'base64').toString() }, { profileData: 1 });
+      const { _id, profileData, privacy } = await user.findOne({ _id: Buffer.from(chatId, 'base64').toString() }, { profileData: 1, privacy: 1 });
 
       const data = {
         id: chatId,
         users: {},
         messages: [],
         name: profileData.firstName + ' ' + profileData.surname,
+        privacy,
       };
 
       data.users[chatId] = {
@@ -223,7 +224,10 @@ export class User {
       const { users, id, name, messages } = chat;
       const usersId = users.map((user, index) => Buffer.from(user, 'base64').toString());
 
-      const chatUsersData = await user.find({ _id: { $in: usersId } }, { 'profileData.profileImage': 1, 'profileData.firstName': 1, 'profileData.surname': 1 });
+      const chatUsersData = await user.find(
+        { _id: { $in: usersId } },
+        { 'profileData.profileImage': 1, 'profileData.firstName': 1, 'profileData.surname': 1, privacy: 1 }
+      );
 
       const sortedChatUsersData = chatUsersData.reduce((newObject, { _id, profileData: { firstName, surname, profileImage } }) => {
         newObject[Buffer.from(_id.toString()).toString('base64')] = {
@@ -240,6 +244,7 @@ export class User {
         name,
         users: sortedChatUsersData,
         messages,
+        privacy: chatUsersData.filter(({ _id }) => _id.toString() !== currentUser._id.toString())[0]?.privacy,
       };
     }
   }
@@ -267,11 +272,12 @@ export class User {
         },
       };
 
+      // TBD: wrong chat name (${user.profileData.firstName} ${user.profileData.surname}), need to use receiver user name instead of sender
       const sender = await user.findOne({ _id: senderDecodedId }, { profileData: 1, chats: 1 }, (error, user) => {
-        user = addMessageCb(error, user, receiverId, message);
+        user = addMessageCb(error, user, { receiverId: receiverId, receiverName: `${user.profileData.firstName} ${user.profileData.surname}` }, message);
       });
       const receiver = await user.findOne({ _id: receiverDecodedId }, { profileData: 1, chats: 1 }, (error, user) => {
-        user = addMessageCb(error, user, senderId, message);
+        user = addMessageCb(error, user, { receiverId: senderId, receiverName: `${user.profileData.firstName} ${user.profileData.surname}` }, message);
       });
 
       const senderUpdatedChat = await user.findOne({ _id: senderDecodedId }, { chats: 1 });
