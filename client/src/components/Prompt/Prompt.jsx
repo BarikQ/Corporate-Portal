@@ -23,6 +23,7 @@ Prompt.propTypes = {
   cancelText: PropTypes.string,
   confirmText: PropTypes.string,
   isConfirmButton: PropTypes.bool,
+  returnCloseHandler: PropTypes.bool,
 };
 
 const Transition = React.forwardRef(function Transition(props, ref) {
@@ -41,6 +42,7 @@ export default function Prompt({
   DialogPromptComponentParams,
   cancelText,
   confirmText,
+  returnCloseHandler,
   isConfirmButton = true,
 }) {
   const [open, setOpen] = useState(false);
@@ -58,10 +60,9 @@ export default function Prompt({
   };
 
   const handleConfirm = (e, newData = sdata) => {
-    console.log(data, sdata, newData);
     e.stopPropagation();
-    handleClose();
-    if (onConfirm) onConfirm(newData);
+    if (!returnCloseHandler) handleClose();
+    if (onConfirm) onConfirm(newData, returnCloseHandler ? handleClose : null);
   };
 
   return (
@@ -81,7 +82,11 @@ export default function Prompt({
             </DialogContentText>
           ) : null}
           {DialogPromptComponent && (
-            <DialogPromptComponent {...DialogPromptComponentParams} onSuccess={handleConfirm} />
+            <DialogPromptComponent
+              key={JSON.stringify({ ...DialogPromptComponentParams })}
+              {...DialogPromptComponentParams}
+              onSuccess={handleConfirm}
+            />
           )}
         </DialogContent>
         <DialogActions>

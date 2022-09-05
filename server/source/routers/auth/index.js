@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { login, logout, auth, signature } from './route';
+import { login, logout, auth, signature } from './route.js';
 import { limiter, authenticate } from '../../utils';
 
 export const router = express.Router();

@@ -3,24 +3,24 @@ import bcrypt from 'bcrypt';
 
 import { user } from '../odm';
 import { objectCropper, fileUploader } from '../utils';
+import { mainRoute } from '../constants';
 
-const mainRoute = 'iTechArt/Portal';
 const cloudFolder = 'Users';
 
-function addMessageCb(error, user, targetUser, message) {
+function addMessageCb(error, user, { receiverId, receiverName }, message) {
   const currentUserId = Buffer.from(user._id.toString()).toString('base64');
-
-  if (!user.chats.get(targetUser)) {
-    user.chats.set(targetUser, {
-      users: [currentUserId, targetUser],
-      name: `${user.profileData.firstName} ${user.profileData.surname}`,
-      id: targetUser,
+  console.log(receiverId);
+  if (!user.chats.get(receiverId)) {
+    user.chats.set(receiverId, {
+      users: [currentUserId, receiverId],
+      name: receiverName,
+      id: receiverId,
       messages: [message],
     });
   } else {
-    const aaa = user.chats.get(targetUser);
-    aaa.messages.push(message);
-    user.chats.set(targetUser, aaa);
+    const chat = user.chats.get(receiverId);
+    chat.messages.push(message);
+    user.chats.set(receiverId, chat);
   }
 
   user.save((err, res) => {
@@ -38,21 +38,55 @@ export class User {
     return await user.create(this.data);
   }
 
-  async getUser(userId) {
-    const { _id, profileData, friends } = await user.findOne(userId, {
-      profileData: 1,
-      friends: 1,
-    });
+  async allowAccess(accessToken) {
+    return await user.findOne({ accessToken });
+  }
+
+  async getUser(userId, requester) {
+    const { profileData, friends, posts, privacy } = await user.findOne(
+      { _id: userId },
+      {
+        profileData: 1,
+        friends: 1,
+        posts: 1,
+        privacy: 1,
+      }
+    );
+    const access = { profile: true, messages: true };
+    const { profileImage, firstName, surname, city, birthDate } = profileData;
+
+    if (Buffer.from(userId.toString()).toString('base64') !== requester) {
+      if (privacy.blackList && privacy.blackList.includes(requester)) {
+        access.profile = false;
+        access.messages = false;
+      } else {
+        if (privacy.profile && privacy.profile.deny.includes(requester)) {
+          access.profile = false;
+        }
+        if (privacy.profile && privacy.messages.deny.includes(requester)) {
+          access.messages = false;
+        }
+      }
+    }
+
+    if (!access.profile)
+      return {
+        id: Buffer.from(userId.toString()).toString('base64'),
+        profileData: { profileImage, firstName, surname, city, birthDate },
+        friends: friends.includes(requester) ? [requester] : [],
+        access,
+      };
+
     const decodedFriends = friends.map((friend) => Buffer.from(friend, 'base64').toString());
     const friendsDocs = await user.find({ _id: decodedFriends }, { profileData: 1 }).limit(6);
     const sortedFriends = friendsDocs.map(({ profileData, _id }) => {
       return {
         profileData: objectCropper(profileData, 'friends'),
-        _id: Buffer.from(_id.toString()).toString('base64'),
+        id: Buffer.from(_id.toString()).toString('base64'),
       };
     });
 
-    return { _id, profileData, friends: sortedFriends };
+    return { id: Buffer.from(userId.toString()).toString('base64'), profileData, friends: sortedFriends, posts, privacy, access };
   }
 
   async updateUser(userId, userData) {
@@ -92,7 +126,7 @@ export class User {
             role: kekUser.role,
           }))
         : data.map((kekUser) => ({
-            _id: Buffer.from(kekUser._id.toString()).toString('base64'),
+            id: Buffer.from(kekUser._id.toString()).toString('base64'),
             profileData: objectCropper(kekUser.profileData, 'friends'),
           }));
     } catch (error) {
@@ -162,13 +196,14 @@ export class User {
     const currentUser = await user.findOne({ _id: Buffer.from(userId, 'base64').toString() }, { profileData: 1, chats: 1 });
 
     if (!currentUser.chats || !currentUser.chats.get(chatId)) {
-      const { _id, profileData } = await user.findOne({ _id: Buffer.from(chatId, 'base64').toString() }, { profileData: 1 });
+      const { _id, profileData, privacy } = await user.findOne({ _id: Buffer.from(chatId, 'base64').toString() }, { profileData: 1, privacy: 1 });
 
       const data = {
         id: chatId,
         users: {},
         messages: [],
         name: profileData.firstName + ' ' + profileData.surname,
+        privacy,
       };
 
       data.users[chatId] = {
@@ -189,7 +224,10 @@ export class User {
       const { users, id, name, messages } = chat;
       const usersId = users.map((user, index) => Buffer.from(user, 'base64').toString());
 
-      const chatUsersData = await user.find({ _id: { $in: usersId } }, { 'profileData.profileImage': 1, 'profileData.firstName': 1, 'profileData.surname': 1 });
+      const chatUsersData = await user.find(
+        { _id: { $in: usersId } },
+        { 'profileData.profileImage': 1, 'profileData.firstName': 1, 'profileData.surname': 1, privacy: 1 }
+      );
 
       const sortedChatUsersData = chatUsersData.reduce((newObject, { _id, profileData: { firstName, surname, profileImage } }) => {
         newObject[Buffer.from(_id.toString()).toString('base64')] = {
@@ -206,6 +244,7 @@ export class User {
         name,
         users: sortedChatUsersData,
         messages,
+        privacy: chatUsersData.filter(({ _id }) => _id.toString() !== currentUser._id.toString())[0]?.privacy,
       };
     }
   }
@@ -220,24 +259,25 @@ export class User {
         content: {
           text: content.text,
           attachments: await Promise.all(
-            await content.attachments.map(async ({ value, name }, index) => {
+            await content.attachments.map(async ({ value, name, type }, index) => {
               const { resource_type, url } = await fileUploader(value, {
                 folder: `${mainRoute}/Files/${senderDecodedId}/${receiverDecodedId}`,
                 use_filename: true,
                 unique_filename: false,
               });
 
-              return { type: resource_type, url, name };
+              return { type: type || resource_type, url, name };
             })
           ),
         },
       };
 
+      // TBD: wrong chat name (${user.profileData.firstName} ${user.profileData.surname}), need to use receiver user name instead of sender
       const sender = await user.findOne({ _id: senderDecodedId }, { profileData: 1, chats: 1 }, (error, user) => {
-        user = addMessageCb(error, user, receiverId, message);
+        user = addMessageCb(error, user, { receiverId: receiverId, receiverName: `${user.profileData.firstName} ${user.profileData.surname}` }, message);
       });
       const receiver = await user.findOne({ _id: receiverDecodedId }, { profileData: 1, chats: 1 }, (error, user) => {
-        user = addMessageCb(error, user, senderId, message);
+        user = addMessageCb(error, user, { receiverId: senderId, receiverName: `${user.profileData.firstName} ${user.profileData.surname}` }, message);
       });
 
       const senderUpdatedChat = await user.findOne({ _id: senderDecodedId }, { chats: 1 });
@@ -280,5 +320,119 @@ export class User {
 
     const currentUser = await user.updateOne({ _id: userIdDecoded }, { $pull: { friends: friendId } });
     const friend = await user.updateOne({ _id: friendIdDecoded }, { $pull: { friends: userId } });
+  }
+
+  async postUserPost(pageId, authorId, postId, { text, attachments }) {
+    const {
+      profileData: { firstName, surname, _id, profileImage },
+    } = await user.findOne({ _id: Buffer.from(authorId, 'base64').toString() }, { profileData: 1 });
+
+    const { posts } = await user.findOneAndUpdate(
+      { _id: pageId },
+      {
+        $set: {
+          [`posts.${postId}`]: {
+            id: postId,
+            author: {
+              id: authorId,
+              firstName,
+              surname,
+              profileImage,
+            },
+            content: {
+              text: text,
+              attachments: attachments,
+            },
+          },
+        },
+      },
+      {
+        useFindAndModify: false,
+        new: true,
+      }
+    );
+
+    return posts.get(postId);
+  }
+
+  async putUserPost(pageId, userId, postId, updates) {
+    const pageIdUser = await user.findOne({ _id: pageId }, { posts: 1 });
+    const { posts } = pageIdUser;
+
+    pageIdUser.posts.set(postId, { ...posts.get(postId).toObject(), ...updates });
+
+    return await pageIdUser.save();
+  }
+
+  async deleteUserPost(pageId, userId, postId) {
+    const pageIdUser = await user.findOne({ _id: pageId }, { posts: 1 });
+    const {
+      author: { id },
+    } = pageIdUser.posts.get(postId);
+
+    if (Buffer.from(id, 'base64').toString() !== userId && userId !== pageId) {
+      throw new Error("You don't have rights to delete this post");
+    }
+
+    pageIdUser.posts.delete(postId);
+    return await pageIdUser.save();
+  }
+
+  async postPostComment(pageId, authorId, postId, commentId, { text, attachments }) {
+    const {
+      profileData: { firstName, surname, _id, profileImage },
+    } = await user.findOne({ _id: Buffer.from(authorId, 'base64').toString() }, { profileData: 1 });
+
+    const { posts } = await user.findOneAndUpdate(
+      { _id: pageId },
+      {
+        $set: {
+          [`posts.${postId}.comments.${commentId}`]: {
+            id: commentId,
+            author: {
+              id: authorId,
+              firstName,
+              surname,
+              profileImage,
+            },
+            content: {
+              text: text,
+              attachments: attachments,
+            },
+          },
+        },
+      },
+      {
+        useFindAndModify: false,
+        new: true,
+      }
+    );
+
+    return posts.get(postId).comments;
+  }
+
+  async putPostComment(pageId, userId, postId, commentId, updates) {
+    const pageIdUser = await user.findOne({ _id: pageId }, { posts: 1 });
+    const post = pageIdUser.posts.get(postId);
+
+    if (!post) throw new Error('Post not found');
+    if (!post.comments.get(commentId)) throw new Error('Comment not found');
+    if (Buffer.from(post.author.id, 'base64').toString() !== userId && userId !== pageId) throw new Error("You don't have rights to delete this post");
+
+    pageIdUser.posts.get(postId).comments.set(commentId, { ...pageIdUser.posts.get(postId).comments.get(commentId).toObject(), ...updates });
+
+    return await pageIdUser.save();
+  }
+
+  async deletePostComment(pageId, userId, postId, commentId) {
+    const pageIdUser = await user.findOne({ _id: pageId }, { posts: 1 });
+    const post = pageIdUser.posts.get(postId);
+
+    if (!post) throw new Error('Post not found');
+    if (!post.comments.get(commentId)) throw new Error('Comment not found');
+    if (Buffer.from(post.author.id, 'base64').toString() !== userId && userId !== pageId) throw new Error("You don't have rights to delete this post");
+
+    pageIdUser.posts.get(postId).comments.delete(commentId);
+    return await pageIdUser.save();
   }
 }

@@ -1,6 +1,7 @@
 import { signUpRequest, signInRequest, authRequest, logoutRequest } from './auth';
 import {
   updateUserData,
+  updateUserPrivacy,
   getUserData,
   getUsers,
   deleteUser,
@@ -8,6 +9,12 @@ import {
   getChatMessages,
   addUserFriend,
   deleteUserFriend,
+  createUserPost,
+  updateUserPost,
+  deleteUserPost,
+  createPostComment,
+  updatePostComment,
+  deletePostComment,
 } from './user';
 
 export {
@@ -15,6 +22,7 @@ export {
   signInRequest,
   authRequest,
   updateUserData,
+  updateUserPrivacy,
   getUserData,
   logoutRequest,
   getUsers,
@@ -23,4 +31,10 @@ export {
   getChatMessages,
   addUserFriend,
   deleteUserFriend,
+  createUserPost,
+  updateUserPost,
+  deleteUserPost,
+  createPostComment,
+  updatePostComment,
+  deletePostComment,
 };

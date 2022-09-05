@@ -132,8 +132,11 @@ function App() {
       <ThemeProvider theme={theme}>
         <div className={`app ${location.pathname === '/' ? 'app--welcome' : ''}`}>
           <Header />
-          <main className={`main ${location.pathname.includes('/admin') ? 'main--admin' : ''}`}>
-            {location.pathname === '/' || location.pathname.includes('/admin') ? null : (
+          <main
+            className={`main ${
+              location.pathname.includes('/admin') && !'true' ? 'main--admin' : ''
+            }`}>
+            {location.pathname === '/' ? null : (
               <div className="main__nav sidebar">
                 <Navigation routes={mainLinks} />
               </div>
@@ -143,7 +146,7 @@ function App() {
                 <Route path="im" element={<Messenger />} />
               </Route>
               <Route element={<ProtectedRoute />}>
-                <Route path="/:profileId" element={<Profile />} />
+                <Route path="/:profileId" key=":profileId" element={<Profile />} />
               </Route>
               <Route element={<ProtectedRoute />}>
                 <Route path="friends" element={<Friends />} />

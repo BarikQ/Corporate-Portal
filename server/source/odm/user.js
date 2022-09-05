@@ -2,6 +2,23 @@ import moment from 'moment';
 import mongoose from 'mongoose';
 import { v4 } from 'uuid';
 
+const attachmentSchema = new mongoose.Schema({
+  type: Object,
+
+  type: {
+    type: String,
+    required: true,
+  },
+  url: {
+    type: String,
+    required: true,
+  },
+  name: {
+    type: String,
+    required: true,
+  },
+});
+
 const messageSchema = new mongoose.Schema({
   type: Object,
   default: {},
@@ -20,7 +37,7 @@ const messageSchema = new mongoose.Schema({
     },
     attachments: {
       type: Array,
-      default: [],
+      of: attachmentSchema,
     },
   },
   date: {
@@ -54,6 +71,140 @@ const chatSchema = new mongoose.Schema({
     type: Array,
     default: [],
     of: messageSchema,
+  },
+});
+
+const commentSchema = new mongoose.Schema(
+  {
+    type: Object,
+
+    id: {
+      type: String,
+      required: true,
+    },
+    author: {
+      type: Object,
+      required: true,
+
+      id: {
+        type: String,
+        required: true,
+      },
+      firstName: {
+        type: String,
+        required: true,
+      },
+      surname: {
+        type: String,
+        required: true,
+      },
+      profileImage: {
+        type: String,
+        required: true,
+      },
+    },
+    content: {
+      type: Object,
+      default: {},
+      required: true,
+
+      text: {
+        type: String,
+      },
+      attachments: {
+        type: Array,
+        of: attachmentSchema,
+      },
+    },
+    likes: {
+      type: Array,
+      default: [],
+    },
+    date: {
+      type: String,
+      default: () => new Date(),
+    },
+  },
+  { _id: false }
+);
+
+const postSchema = new mongoose.Schema(
+  {
+    type: Object,
+
+    id: {
+      type: String,
+      required: true,
+    },
+    author: {
+      type: Object,
+      required: true,
+
+      id: {
+        type: String,
+        required: true,
+      },
+      firstName: {
+        type: String,
+        required: true,
+      },
+      surname: {
+        type: String,
+        required: true,
+      },
+      profileImage: {
+        type: String,
+        required: true,
+      },
+    },
+    content: {
+      type: Object,
+      default: {},
+      required: true,
+
+      text: {
+        type: String,
+      },
+      attachments: {
+        type: Array,
+        of: attachmentSchema,
+      },
+    },
+    comments: {
+      type: Map,
+      default: new Map(),
+      of: commentSchema,
+    },
+    likes: {
+      type: Array,
+      default: [],
+    },
+    date: {
+      type: String,
+      default: () => new Date(),
+    },
+  },
+  { _id: false }
+);
+
+const friendSchena = new mongoose.Schema({
+  type: Object,
+
+  id: {
+    type: String,
+    required: true,
+  },
+  firstName: {
+    type: String,
+    required: true,
+  },
+  surname: {
+    type: String,
+    required: true,
+  },
+  profileImage: {
+    type: String,
+    required: true,
   },
 });
 
@@ -118,6 +269,11 @@ const schema = new mongoose.Schema({
       required: true,
     },
   },
+  posts: {
+    type: Map,
+    default: new Map(),
+    of: postSchema,
+  },
   chats: {
     type: Map,
     default: new Map(),
@@ -130,6 +286,77 @@ const schema = new mongoose.Schema({
     friend: {
       type: String,
       default: null,
+    },
+  },
+  privacy: {
+    type: Object,
+    default: {
+      blackList: [],
+      messages: {
+        allow: [],
+        deny: [],
+      },
+      profile: {
+        allow: [],
+        deny: [],
+      },
+    },
+
+    blackList: {
+      type: Array,
+      default: [],
+
+      id: {
+        type: String,
+      },
+    },
+    messages: {
+      type: Object,
+      default: {
+        allow: [],
+        deny: null,
+      },
+
+      allow: {
+        type: Array,
+        default: [],
+
+        id: {
+          type: String,
+        },
+      },
+      deny: {
+        type: Array,
+        default: null,
+
+        id: {
+          type: String,
+        },
+      },
+    },
+    profile: {
+      type: Object,
+      default: {
+        allow: [],
+        deny: null,
+      },
+
+      allow: {
+        type: Array,
+        default: [],
+
+        id: {
+          type: String,
+        },
+      },
+      deny: {
+        type: Array,
+        default: null,
+
+        id: {
+          type: String,
+        },
+      },
     },
   },
   notifications: {

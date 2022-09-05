@@ -7,10 +7,16 @@
 
   &__nav {
     width: 200px;
+    position: sticky;
+    top: 32px;
   }
 
   &__block {
     width: 100%;
+
+    &-title {
+      padding-bottom: 32px;
+    }
   }
 
   &__form {

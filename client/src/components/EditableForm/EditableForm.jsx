@@ -8,6 +8,8 @@ import { ReactComponent as SendIcon } from 'assets/images/send.svg';
 import { toBase64 } from 'utils';
 
 import './EditableForm.scss';
+import { useRef } from 'react';
+import { Preloader } from 'components';
 
 EditableForm.propTypes = {
   className: PropTypes.string,
@@ -16,6 +18,9 @@ EditableForm.propTypes = {
   submitHandler: PropTypes.func,
   withAttachment: PropTypes.bool,
   type: PropTypes.string,
+  initialState: PropTypes.object,
+  id: PropTypes.string,
+  onSuccess: PropTypes.func,
 };
 
 EditableForm.defaultProps = {
@@ -27,19 +32,45 @@ EditableForm.defaultProps = {
   type: 'send',
 };
 
-function EditableForm({ submitHandler, type, onInput, className, classPrefix, withAttachment }) {
+function EditableForm({
+  submitHandler,
+  type,
+  onInput,
+  className,
+  classPrefix,
+  withAttachment,
+  initialState = { text: '', attachments: [] },
+  id,
+  onSuccess,
+}) {
   const [formData, setFormData] = useReducer(
     (currentValues, newValues) => ({ ...currentValues, ...newValues }),
     {
-      text: '',
-      attachments: [],
+      ...initialState,
     }
   );
+  const [isLoading, setIsLoading] = useState(false);
+  const inputRef = useRef();
 
-  function onAttachmentChange(event) {
-    const files = event.target.files;
+  function onAttachmentChange({ target: { files } }) {
     const filesArray = Array.prototype.slice.call(files);
-    setFormData({ ['attachments']: [...formData['attachments'], ...filesArray] });
+    const newFiles = filesArray.filter((file) => {
+      let isEqual = false;
+
+      formData['attachments'].forEach((formFile) => {
+        if (
+          file.name === formFile.name &&
+          file.lastModified === formFile.lastModified &&
+          file.size === formFile.size &&
+          file.type === formFile.type
+        )
+          isEqual = true;
+      });
+
+      return !isEqual && file;
+    });
+
+    setFormData({ ['attachments']: [...formData['attachments'], ...newFiles] });
   }
 
   function removeAttachment(index, event, file, name) {
@@ -52,7 +83,7 @@ function EditableForm({ submitHandler, type, onInput, className, classPrefix, wi
     if (type.includes('image')) {
       return (
         <div className="attachments__item attachment" key={name}>
-          <img src={URL.createObjectURL(file)} />
+          <img src={file.url || URL.createObjectURL(file)} />
           <DeleteIcon
             onClick={(event) => removeAttachment(index, event, file, name)}
             className="attachment__delete"
@@ -64,8 +95,21 @@ function EditableForm({ submitHandler, type, onInput, className, classPrefix, wi
     if (type.includes('video')) {
       return (
         <div className="attachments__item attachment" key={name}>
-          <video controls src={URL.createObjectURL(file)} />
+          <video controls src={file.url || URL.createObjectURL(file)} />
           <DeleteIcon
+            onClick={(event) => removeAttachment(index, event, file, name)}
+            className="attachment__delete"
+          />
+        </div>
+      );
+    }
+
+    if (type.includes('audio')) {
+      return (
+        <div className="attachments__item attachment" key={name}>
+          <audio controls src={file.url || URL.createObjectURL(file)} />
+          <DeleteIcon
+            color="primary"
             onClick={(event) => removeAttachment(index, event, file, name)}
             className="attachment__delete"
           />
@@ -85,86 +129,105 @@ function EditableForm({ submitHandler, type, onInput, className, classPrefix, wi
   }
 
   async function preSubmit(event) {
-    event.preventDefault();
+    try {
+      event.preventDefault();
 
-    submitHandler(event, {
-      text: formData['text'],
-      attachments: await Promise.all(
-        formData['attachments'].map(async (attachment, index) => {
-          const converted = await toBase64(attachment);
-          return { value: converted, name: attachment.name };
-        })
-      ),
-    });
+      if (!formData.text.length && !formData.attachments.length) return;
 
-    setFormData({
-      text: '',
-      attachments: [],
-    });
+      setIsLoading(() => true);
+      const sendedData = {
+        text: formData['text'],
+        attachments: await Promise.all(
+          formData['attachments'].map(async (attachment, index) => {
+            const converted = attachment.url || (await toBase64(attachment));
+            const type = attachment.type.includes('audio')
+              ? 'audio'
+              : attachment.type.includes('video')
+              ? 'video'
+              : attachment.type.includes('image')
+              ? 'image'
+              : 'file';
+            return { value: converted, name: attachment.name, type, url: attachment.url };
+          })
+        ),
+      };
+
+      const response = await submitHandler(event, sendedData);
+      if (onSuccess) onSuccess(event, response);
+
+      if (inputRef.current) {
+        inputRef.current.value = null;
+        inputRef.current.files = null;
+      }
+      setFormData(initialState);
+      setIsLoading(() => false);
+    } catch (error) {
+      console.error(error);
+      setIsLoading(() => false);
+    }
   }
 
   return (
-    <form
-      onSubmit={(event) => preSubmit(event)}
-      className={`editable-form editable-form--${type} ${className} ${
-        classPrefix ? `${classPrefix}__form'}` : ''
-      }`}>
-      <TextField
-        onInput={(event) => setFormData({ ['text']: event.target.value })}
-        value={formData.text}
-        multiline
-        maxRows={8}
-        className={`editable-form__text  ${
-          classPrefix ? `${classPrefix}__text` : ''
-        } custom-scrollbar`}
-      />
-
-      {withAttachment ? (
-        <label
-          className={`editable-form__attachment-label ${
-            classPrefix ? `${classPrefix}__attachment-label` : ''
-          }`}
-          htmlFor="editorAttachment">
-          <AttachmentIcon className={`${classPrefix ? `${classPrefix}__icon` : ''}`} />
-
-          <input
-            className={`editable-form__attachment-input ${
-              classPrefix ? `${classPrefix}__attachment-input` : ''
-            }`}
-            type="file"
-            id="editorAttachment"
-            multiple="multiple"
-            onChange={onAttachmentChange}
-          />
-        </label>
-      ) : null}
-
-      {type === 'post' ? (
-        <button
-          type="submit"
-          className={`editable-form__button ${
-            classPrefix ? `${classPrefix}__button` : ''
-          } button--default`}>
-          Publish
-        </button>
+    <>
+      {isLoading ? (
+        <Preloader isLoading />
       ) : (
-        <label className="editable-form__button--message" htmlFor="formSubmit">
-          <SendIcon
-            className={`editable-form__send-icon ${classPrefix ? `${classPrefix}__button` : ''}`}
+        <form
+          onSubmit={(event) => preSubmit(event)}
+          className={`editable-form editable-form--${type} ${className} ${
+            classPrefix ? `${classPrefix}__form'}` : ''
+          }`}
+          id={`form${id ? `-${id}` : ''}`}>
+          <TextField
+            onInput={(event) => setFormData({ ['text']: event.target.value })}
+            value={formData.text}
+            multiline
+            maxRows={8}
+            className={`editable-form__text  ${
+              classPrefix ? `${classPrefix}__text` : ''
+            } custom-scrollbar`}
           />
+          {withAttachment ? (
+            <label
+              className={`editable-form__attachment-label ${
+                classPrefix ? `${classPrefix}__attachment-label` : ''
+              }`}
+              htmlFor={`editorAttachment${id ? `-${id}` : ''}`}>
+              <AttachmentIcon className={`${classPrefix ? `${classPrefix}__icon` : ''}`} />
 
-          <input className="" type="submit" id="formSubmit" />
-        </label>
+              <input
+                className={`editable-form__attachment-input ${
+                  classPrefix ? `${classPrefix}__attachment-input` : ''
+                }`}
+                type="file"
+                ref={inputRef}
+                id={`editorAttachment${id ? `-${id}` : ''}`}
+                multiple="multiple"
+                onChange={onAttachmentChange}
+              />
+            </label>
+          ) : null}
+
+          <label
+            className="editable-form__button--message"
+            htmlFor={`formSubmit${id ? `-${id}` : ''}`}>
+            <SendIcon
+              className={`editable-form__send-icon ${classPrefix ? `${classPrefix}__button` : ''}`}
+            />
+
+            <input className="" type="submit" id={`formSubmit${id ? `-${id}` : ''}`} />
+          </label>
+
+          {formData.attachments ? (
+            <div className="attachments">
+              {formData['attachments'].map((attachment, index) => {
+                return attachmentPreview(index, attachment, attachment.name, attachment.type);
+              })}
+            </div>
+          ) : null}
+        </form>
       )}
-
-      {formData.attachments ? (
-        <div className="attachments">
-          {formData['attachments'].map((attachment, index) => {
-            return attachmentPreview(index, attachment, attachment.name, attachment.type);
-          })}
-        </div>
-      ) : null}
-    </form>
+    </>
   );
 }
 

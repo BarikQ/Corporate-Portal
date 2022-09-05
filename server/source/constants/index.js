@@ -7,3 +7,5 @@ export const dataRequests = {
   admin: 'admin',
   user: 'user',
 };
+
+export const mainRoute = 'iTechArt/Portal';
